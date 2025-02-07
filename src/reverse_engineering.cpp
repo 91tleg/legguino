@@ -68,7 +68,7 @@ void dump_address_space(int begin, int end)
         }
     }
 }
-
+/*
 void monitor_special_addresses(int force_one)
 {
     short short_array[] PROGMEM = 
@@ -142,3 +142,4 @@ void monitor_special_addresses(int force_one)
         }
     }
 }
+*/

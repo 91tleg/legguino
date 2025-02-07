@@ -1,10 +1,10 @@
 #include "legguino.h"
 
-uint8_t button1_state = LOW;  // NEXT
-uint8_t button2_state = LOW;  // PREV
-uint8_t current_page = 0;
 LiquidCrystal lcd(rs, en, d4, d5, d6, d7);
 
+extern uint8_t lcd_current_page;
+extern uint8_t button1_state;
+extern uint8_t button2_state;
 extern ecu_params ecu_parameters;
 extern input_switches status;
 extern io_switches status0;
@@ -14,24 +14,9 @@ extern trouble_code_three status3;
 
 void setup()
 {
-  pinMode(A14, OUTPUT);
-  pinMode(A13, OUTPUT);
-  pinMode(A4, OUTPUT);
-  pinMode(A0, OUTPUT);
-  pinMode(A2, OUTPUT);
-  pinMode(A1, OUTPUT);
-  digitalWrite(A14, LOW);
-  digitalWrite(A13, HIGH);
-  digitalWrite(A4, LOW);
-  digitalWrite(A0, LOW);
-  digitalWrite(A2, LOW);
-  digitalWrite(A1, HIGH);
-  lcd.begin(16, 2);
-  lcd.print(F("Buckle up....."));
+  lcd_init();
 
   pinMode(LED_PIN, OUTPUT);
-  pinMode(BUTTON1_PIN, INPUT);
-  pinMode(BUTTON2_PIN, INPUT);
 
   // Serial to read from Subaru, pins 0 and 1
   HWSerial.begin(1953, SERIAL_8E1);
@@ -114,43 +99,43 @@ void __attribute__((always_inline)) loop()
     // Check if button is pressed
   if (digitalRead(BUTTON1_PIN) == HIGH)
   {
-    ++current_page;
+    ++lcd_current_page;
     _delay_ms(1000);
+  }
+  if (lcd_current_page > LCD_MAX_PAGE_COUNT)
+  {
+    lcd_current_page = 0;
   }
   if (digitalRead(BUTTON2_PIN) == HIGH)
   {
-    --current_page;
+    --lcd_current_page;
     _delay_ms(1000);
   }
-  if (current_page > LCD_MAX_PAGE_COUNT)
+  if (lcd_current_page < 0)
   {
-    current_page = 0;
-  }
-  if (current_page < 0)
-  {
-    current_page = LCD_MAX_PAGE_COUNT;
+    lcd_current_page = LCD_MAX_PAGE_COUNT;
   }
 
 
-  switch (current_page)
+  switch (lcd_current_page)
   {
   case 0:
-    ecu_parameters.vb = read_battery_voltage();
+    read_battery_voltage();
     lcd.setCursor(0, 0);
     lcd.print(F("VB: "));
     lcd.print(ecu_parameters.vb);
 
-    ecu_parameters.vsp = read_speed();
+    read_speed();
     lcd.setCursor(8, 0);
     lcd.print(F("SPD:"));
     lcd.print(ecu_parameters.vsp);
 
-    ecu_parameters.erev = read_rpm();
+    read_rpm();
     lcd.setCursor(0, 1);
     lcd.print(F("REV:"));
     lcd.print(ecu_parameters.erev);
 
-    ecu_parameters.tw = read_coolant_temp();
+    read_coolant_temp();
     lcd.setCursor(8, 1);
     lcd.print(F("TW: "));
     lcd.print(ecu_parameters.tw);
@@ -159,55 +144,57 @@ void __attribute__((always_inline)) loop()
     break;
 
   case 1:
-    ecu_parameters.advs = read_fuel_trim();
+    read_fuel_trim();
     lcd.setCursor(0, 0);
     lcd.print(F("ADV:"));
-    lcd.print(ecu_parameters.qa);
+    lcd.print(ecu_parameters.alphar);
 
-    ecu_parameters.qa = read_airflow();
+    read_airflow();
     lcd.setCursor(8, 0);
     lcd.print(F("MAF:"));
     lcd.print(ecu_parameters.qa);
 
-    ecu_parameters.ldata = read_load();
+    read_load();
     lcd.setCursor(0, 1);
     lcd.print(F("LD: "));
     lcd.print(ecu_parameters.ldata);
 
-    ecu_parameters.tps = read_throttle_percentage();
+    read_throttle_percentage();
     lcd.setCursor(8, 1);
     lcd.print(F("TPS:"));
     lcd.print(ecu_parameters.tps);
+
     _delay_ms(1000);
     lcd.clear();
     break;
 
   case 2:
-    ecu_parameters.tim = read_injector_pulse_width();
+    read_injector_pulse_width();
     lcd.setCursor(0, 0);
     lcd.print(F("IPW:"));
     lcd.print(ecu_parameters.tim);
 
-    ecu_parameters.isc = read_iacv_duty_cycle();
+    read_iacv_duty_cycle();
     lcd.setCursor(8, 0);
     lcd.print(F("ISC:"));
     lcd.print(ecu_parameters.isc);
 
-    ecu_parameters.o2r = read_o2_signal();
+    read_o2_signal();
     lcd.setCursor(0, 1);
     lcd.print(F("O2R:"));
     lcd.print(ecu_parameters.o2r);
 
-    ecu_parameters.rtrd = read_timing_correction();
+    read_timing_correction();
     lcd.setCursor(8, 1);
     lcd.print(F("RTD:"));
-    lcd.print(ecu_parameters.vb);
+    lcd.print(ecu_parameters.advs);
+
     _delay_ms(1000);
     lcd.clear();
     break;
 
   case 3:
-    ecu_parameters.barop = read_atmosphere_pressure();
+    read_atmosphere_pressure();
     if (ecu_parameters.romid_param == JECS3_ROMID)  // 1993-1994 JECS non-turbo ECU -- has no barometric pressure reading
     {
       ecu_parameters.barop = 0;
@@ -216,20 +203,21 @@ void __attribute__((always_inline)) loop()
     lcd.print(F("BAR:"));
     lcd.print(ecu_parameters.barop);
 
-    ecu_parameters.manip = read_manifold_pressure();
+    read_manifold_pressure();
     lcd.setCursor(8, 0);
     lcd.print(F("MP: "));
     lcd.print(ecu_parameters.manip);
 
-    ecu_parameters.alphar = read_boost_control_duty_cycle();
+    read_boost_control_duty_cycle();
     lcd.setCursor(0, 1);
-    lcd.print(F("BST:"));
-    lcd.print(ecu_parameters.alphar);
+    lcd.print(F("WGC:"));
+    lcd.print(ecu_parameters.wgc);
 
-    ecu_parameters.thv = read_throttle_signal();
+    read_throttle_signal();
     lcd.setCursor(8, 1);
     lcd.print(F("THV:"));
     lcd.print(ecu_parameters.thv);
+
     _delay_ms(1000);
     lcd.clear();
     break;
@@ -536,13 +524,16 @@ void __attribute__((always_inline)) loop()
         send_clear_command(STORED_TROUBLE_CODE_THREE_ADDR, STORED_TROUBLE_CODE_ONE_ADDR);
         _delay_ms(1000);
       }
-      ++current_page;
+      ++lcd_current_page;
     }
+    _delay_ms(1000);
+    lcd.clear();
     break;
 
   default:  // Should not be any
     break;
   }
+  #pragma GCC diagnostic pop
 }
 
 /*

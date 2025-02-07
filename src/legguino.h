@@ -3,31 +3,26 @@
 
 #include <Arduino.h>
 #include <stdint.h>
-#include <Wire.h>
 #include <LiquidCrystal.h>
 #include <avr/io.h>
 #include <util/delay.h>
+#include "pindef.h"
 #include "ssm1.h"
 #include "utilities.h"
 #include "reverse_engineering.h"
-/*
- *  Brown cable: Pin 0 (Serial RX --> Subaru TX --> OBD-II 13)
- *  Red cable:   Pin 1 (Serial TX --> Subaru RX --> OBD-II 12)
- */
+#include "sensors.h"
+#include "sensors_state.h"
+#include "lcd/lcd.h"
+#include "dbg.h"
+
+/*    Yellow 9-pin diagnosis connector:    */
+/* Green/white cable:      Pin 2  transmit */
+/* Light green/red cable:  Pin 3  recieve  */
+/* Black/red cable:        Pin 9  ground   */
+
 #define HWSerial Serial1
 #define USBSerial Serial
-#define PRINT_DEBUG_MESSAGES_ON_USB 0
 #define TEST 0
-#define BUTTON1_PIN 31
-#define BUTTON2_PIN 32
-#define LED_PIN 13
-#define rs A3
-#define en A5
-#define d4 A9
-#define d5 A10
-#define d6 A11
-#define d7 A12
-constexpr uint8_t LCD_MAX_PAGE_COUNT = 13;
 
 void setup();
 void loop();

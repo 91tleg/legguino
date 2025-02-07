@@ -150,127 +150,115 @@ static inline byte read_data_from_address(short addr)
     return read_data_from_address_ex(addr, true);
 }
 
-static inline float read_battery_voltage(void)
+static inline void read_battery_voltage(void)
 {
     float value = read_data_from_address(BATTERY_VOLTAGE_ADDR) * 0.08;
-    return value;
+    ecu_parameters.vb = value;
 }
 
-static inline uint8_t read_speed(void)
+static inline void read_speed(void)
 {
     uint8_t value = read_data_from_address(SPEED_ADDR) * 1.6; // 2?
-    return value;
+    ecu_parameters.vsp = value;
 }
 
-static inline uint16_t read_rpm(void)
+static inline void read_rpm(void)
 {
     uint16_t value = read_data_from_address(RPM_ADDR) * 25;
-    return value;
+    ecu_parameters.erev = value;
 }
 
-static inline int16_t read_coolant_temp(void) 
+static inline void read_coolant_temp(void) 
 {
     int16_t value = pgm_read_byte(&coolant_look_up_table[read_data_from_address(COOLANT_ADDR)]);
     if (value < 14) 
-    {
+    {   
         value += 255;
     }
     if (value > (255 - 29)) 
     {
         value = -value;
     }
-    return value;
+    ecu_parameters.tw = value;
 }
 
-static inline uint16_t read_airflow(void)
+static inline void read_airflow(void)
 {
     uint16_t value = (read_data_from_address(AIRFLOW_SENSOR_ADDR) * 100) / 256;
-    return value;
+    ecu_parameters.qa = value;
 }
 
-static inline uint16_t read_throttle_percentage(void)
+static inline void read_throttle_percentage(void)
 {
     uint16_t value = (read_data_from_address(THROTTLE_ADDR) * 100) / 256;
-    return value;
+    ecu_parameters.tps = value;
 }
 
-static inline uint8_t read_throttle_signal(void)
+static inline void read_throttle_signal(void)
 {
     uint16_t value = read_data_from_address(THROTTLE_ADDR);
-    return value;
+    ecu_parameters.thv = value;
 }
 
-static inline int16_t read_manifold_pressure(void)
+static inline void read_manifold_pressure(void)
 {
     int16_t value = (read_data_from_address(MANIFOLD_PRESSURE_ADDR) / 0.128) - 1060;
-    return value;
+    ecu_parameters.manip  = value;
 }
 
-static inline uint16_t read_boost_control_duty_cycle(void)
+static inline void read_boost_control_duty_cycle(void)
 {
     uint16_t value = (read_data_from_address(BOOST_SOLENOID_ADDR) * 100) / 256;
-    return value;
+    ecu_parameters.wgc = value;
 }
 
-static inline uint16_t read_ignition_timing(void)
+static inline void read_ignition_timing(void)
 {
     uint16_t value = read_data_from_address(IGNITION_ADVANCE_ADDR);
-    return value;
+    ecu_parameters.advs = value;
 }
 
-static inline uint16_t read_load(void)
+static inline void read_load(void)
 {
     uint16_t value = read_data_from_address(ENGINE_LOAD_ADDR);
-    return value;
+    ecu_parameters.ldata = value;
 }
 
-static inline uint16_t read_injector_pulse_width(void)
+static inline void read_injector_pulse_width(void)
 {
     uint16_t value = read_data_from_address(INJECTOR_PULSE_WIDTH_ADDR) * 2.048;
-    return value;
+    ecu_parameters.tim = value;
 }
 
-static inline uint16_t read_iacv_duty_cycle(void)
+static inline void read_iacv_duty_cycle(void)
 {
     uint16_t value = read_data_from_address(ISU_DUTY_VALVE_ADDR) / 2;
-    return value;
+    ecu_parameters.isc = value;
 }
 
-static inline uint16_t read_o2_signal(void)
+static inline void read_o2_signal(void)
 {
     uint16_t value = read_data_from_address(O2_AVERAGE_ADDR) / 100;
-    return value;
+    ecu_parameters.o2r = value;
 }
 
-static inline uint16_t read_o2_min(void)
-{
-    uint16_t value = read_data_from_address(O2_MINIMUM_ADDR) / 100;
-    return value;
-}
-
-static inline uint16_t read_o2_max(void)
-{
-    uint16_t value = read_data_from_address(O2_MAXIMUM_ADDR) / 100;
-    return value;
-}
-
-static inline uint16_t read_timing_correction(void)
+static inline void read_timing_correction(void)
 {
     uint16_t value = read_data_from_address(KNOCK_CORRECTION_ADDR);
-    return value;
+    ecu_parameters.rtrd = value;
 }
 
-static inline uint16_t read_fuel_trim(void)
+static inline void read_fuel_trim(void)
 {
     uint16_t value = (read_data_from_address(AF_CORRECTION_ADDR) - 128) / 1.28;
-    return value;
+    ecu_parameters.alphar = value;
 }
 
 // Initial MAP reading taken before the engine is running
-static inline uint16_t read_atmosphere_pressure(void)
+static inline void read_atmosphere_pressure(void)
 {
     uint16_t value = (930 - read_data_from_address(ATMOSPHERIC_PRESSURE_ADDR)) * 3.09;
-    return value;
+    ecu_parameters.barop = value;
 }
 
 void read_input_switches(void)
