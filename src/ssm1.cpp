@@ -107,9 +107,9 @@ byte read_data_from_address_ex(short addr, bool read_once_only)
     {
         // TODO: test
         HWSerial.readBytes(answer, 3);
-        digitalWrite(LED_PIN, HIGH);
+        digitalWrite(LED_BUILTIN, HIGH);
         _delay_ms(1000);
-        digitalWrite(LED_PIN, LOW);
+        digitalWrite(LED_BUILTIN, LOW);
         _delay_ms(1000);
         return answer[2];
     }
@@ -132,9 +132,9 @@ byte read_data_from_address_ex(short addr, bool read_once_only)
             }
         }
         HWSerial.readBytes(answer, 3);
-        digitalWrite(LED_PIN, HIGH);
+        digitalWrite(LED_BUILTIN, HIGH);
         _delay_ms(1000);
-        digitalWrite(LED_PIN, LOW);
+        digitalWrite(LED_BUILTIN, LOW);
         _delay_ms(1000);
     }
 

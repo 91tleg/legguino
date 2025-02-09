@@ -10,26 +10,18 @@ extern trouble_code_one status1;
 extern trouble_code_two status2;
 extern trouble_code_three status3;
 
-uint8_t btn1 = LOW;
-uint8_t btn1_prev = LOW;
-uint8_t btn2 = LOW;
-uint8_t btn2_prev = LOW;
+extern uint8_t btn1;
+extern uint8_t btn1_prev;
+extern uint8_t btn2;
+extern uint8_t btn2_prev;
 
 void setup()
 {
   lcd_init();
-
-  pinMode(BUTTON1_PIN, INPUT_PULLUP);
-  pinMode(BUTTON2_PIN, INPUT_PULLUP);
+  btn_init();
+  read_btns();
   pinMode(LED_BUILTIN, OUTPUT);
-  btn1 = digitalRead(BUTTON1_PIN);
-  btn1_prev = digitalRead(BUTTON1_PIN);
-  btn2 = digitalRead(BUTTON2_PIN);
-  btn2_prev = digitalRead(BUTTON2_PIN);
 
-  pinMode(LED_PIN, OUTPUT);
-
-  // Serial to read from Subaru, pins 0 and 1
   HWSerial.begin(1953, SERIAL_8E1);
 
   // Serial to send data over USB
@@ -64,7 +56,7 @@ void setup()
       ecu_parameters.romid_param[i] = romid_buffer[i];
     }
   }
-  lcd.print(F("ROM ID: "));
+  lcd.print(F("ROM ID:"));
   lcd.print(ecu_parameters.romid_param[0]);
   lcd.print(".");
   lcd.print(ecu_parameters.romid_param[1]);
@@ -101,13 +93,6 @@ void setup()
 
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wattributes"
-/* Sometimes loop() is inlined by LTO & sometimes not
- * When not inlined, there is a huge difference in stack usage: 60+ bytes
- * That eats into available RAM.
- * Adding __attribute__((always_inline)) forces the LTO process to inline.
- * Since the function is declared in an Arduino header, we can't change
- * it to inline, so we need to suppress the resulting warning.
- */
 void __attribute__((always_inline)) loop()
 {
   if (lcd_current_page >= LCD_MAX_PAGE_COUNT)
@@ -486,10 +471,8 @@ void __attribute__((always_inline)) loop()
 
   case 12:
 
-    lcd.setCursor(0, 0);
+    lcd.setCursor(1, 0);
     lcd.print("Clear codes?");
-    lcd.setCursor(3, 1);
-    lcd.print("press 2");
 
     btn2 = digitalRead(BUTTON2_PIN);
     if (btn2 == LOW && btn2_prev == HIGH)
@@ -499,6 +482,7 @@ void __attribute__((always_inline)) loop()
       lcd.setCursor(2, 0);
       lcd.print("Clearing.....");
       _delay_ms(5000);
+      
       for (uint8_t i = 0; i <= 3; ++i)
       {
         // send_clear_command(ACTIVE_TROUBLE_CODE_THREE_ADDR, ACTIVE_TROUBLE_CODE_THREE_ADDR);
@@ -520,7 +504,6 @@ void __attribute__((always_inline)) loop()
       lcd_current_page++;
     }
     _delay_ms(100);
-    //btn2_prev = btn2;
     btn2_prev = digitalRead(BUTTON2_PIN);
     break;
 
@@ -530,8 +513,8 @@ void __attribute__((always_inline)) loop()
 
   _delay_ms(150);
   lcd.clear();
-#pragma GCC diagnostic pop
 }
+#pragma GCC diagnostic pop
 
 /*
 if (USBSerial.available())

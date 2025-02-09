@@ -20,7 +20,7 @@ void lcd_init(void)
     lcd.begin(16, 2);
 
     #if PRINT_DEBUG_MESSAGES_ON_LCD
-        lcd.print("set up done");
+        lcd.print("lcd set up done");
     #endif
     
 }
