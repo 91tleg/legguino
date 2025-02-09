@@ -16,7 +16,7 @@ void stop_read(void)
         HWSerial.write(txbuf[i]);
     }
     HWSerial.flush();
-    for(uint32_t i = 0; i < 4000000; ++i) { __asm__ volatile("nop"); }
+    _delay_ms(1000);
 }
 
 bool get_romid(byte *buffer)
@@ -31,7 +31,7 @@ bool get_romid(byte *buffer)
     {
         HWSerial.write(read_command[i]);
     }
-    for(uint32_t i = 0; i < 4000000; ++i) { __asm__ volatile("nop"); }
+    _delay_ms(1000);
     HWSerial.flush();
     read_until_no_more();
 
@@ -51,7 +51,7 @@ bool get_romid(byte *buffer)
         {
             HWSerial.write(romid_command[i]);
         }
-        for(uint32_t i = 0; i < 4000000; ++i) { __asm__ volatile("nop"); }
+        _delay_ms(1000);
         HWSerial.flush();
         ++retries;
 
@@ -108,9 +108,9 @@ byte read_data_from_address_ex(short addr, bool read_once_only)
         // TODO: test
         HWSerial.readBytes(answer, 3);
         digitalWrite(LED_PIN, HIGH);
-        for (uint32_t i = 0; i < 4000000; ++i) { __asm__ volatile("nop"); }
+        _delay_ms(1000);
         digitalWrite(LED_PIN, LOW);
-        for (uint32_t i = 0; i < 4000000; ++i) { __asm__ volatile("nop"); }
+        _delay_ms(1000);
         return answer[2];
     }
 
@@ -133,9 +133,9 @@ byte read_data_from_address_ex(short addr, bool read_once_only)
         }
         HWSerial.readBytes(answer, 3);
         digitalWrite(LED_PIN, HIGH);
-        for (uint32_t i = 0; i < 4000000; ++i) { __asm__ volatile("nop"); }
+        _delay_ms(1000);
         digitalWrite(LED_PIN, LOW);
-        for (uint32_t i = 0; i < 4000000; ++i) { __asm__ volatile("nop"); }
+        _delay_ms(1000);
     }
 
     if (read_once_only)
@@ -244,7 +244,7 @@ static inline void read_o2_signal(void)
 
 static inline void read_timing_correction(void)
 {
-    uint16_t value = read_data_from_address(KNOCK_CORRECTION_ADDR);
+    uint16_t value = read_data_from_address(AF_CORRECTION_ADDR);
     ecu_parameters.rtrd = value;
 }
 
@@ -254,7 +254,6 @@ static inline void read_fuel_trim(void)
     ecu_parameters.alphar = value;
 }
 
-// Initial MAP reading taken before the engine is running
 static inline void read_atmosphere_pressure(void)
 {
     uint16_t value = (930 - read_data_from_address(ATMOSPHERIC_PRESSURE_ADDR)) * 3.09;

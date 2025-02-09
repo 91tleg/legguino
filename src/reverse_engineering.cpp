@@ -30,7 +30,7 @@ void dump_address_space(int begin, int end)
     {
         byte b1 = 1;
         byte b2 = 2;
-        PORTB |= (1 << 5);  // LED ON
+        digitalWrite(LED_BUILTIN, HIGH);
         int8_t timeout = 2;
         while (b1 != b2 && timeout)
         {
@@ -53,7 +53,7 @@ void dump_address_space(int begin, int end)
                 USBSerial.println(b2, HEX);
             }
         }
-        PORTB &=  ~(1 << 5);  // LED OFF
+        digitalWrite(LED_BUILTIN, LOW);
         USBSerial.print(i, HEX);
         USBSerial.print(":");
         USBSerial.print(b1, HEX);

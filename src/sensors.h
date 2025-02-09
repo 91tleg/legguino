@@ -1,9 +1,10 @@
 #ifndef SENSORS_H
 #define SENSORS_H
 
+#pragma pack(push, 1)
 typedef struct 
 {
-    uint32_t romid_param;
+    byte romid_param[3];
     uint16_t vb;
     uint16_t vsp;
     uint16_t erev;
@@ -22,6 +23,7 @@ typedef struct
     uint16_t wgc;
     uint16_t barop;
 } ecu_params;
+#pragma pack(pop)
 
 const byte coolant_look_up_table[256] PROGMEM = 
 {
