@@ -1,6 +1,7 @@
 #include "legguino.h"
 
 LiquidCrystal lcd(rs, en, d4, d5, d6, d7);
+LcdBarGraph lbg(&lcd, NUM_COLS);
 
 extern uint8_t lcd_current_page;
 extern ecu_params ecu_parameters;
@@ -471,33 +472,48 @@ void __attribute__((always_inline)) loop()
 
   case 12:
 
-    lcd.setCursor(1, 0);
-    lcd.print("Clear codes?");
+    lcd.setCursor(2, 0);
+    lcd.print("CLEAR CODES?");
 
     btn2 = digitalRead(BUTTON2_PIN);
     if (btn2 == LOW && btn2_prev == HIGH)
     {
       digitalWrite(LED_BUILTIN, HIGH);
+      lcd.setCursor(0, 0);
+      lcd.print("CLEARING........");
+      _delay_ms(150);
       lcd.clear();
-      lcd.setCursor(2, 0);
-      lcd.print("Clearing.....");
-      _delay_ms(5000);
-      
+      lcd.setCursor(0, 1);
+      lbg.drawValue(0, 100);
+      _delay_ms(400);
+      lbg.drawValue(10, 100);
       for (uint8_t i = 0; i <= 3; ++i)
       {
         // send_clear_command(ACTIVE_TROUBLE_CODE_THREE_ADDR, ACTIVE_TROUBLE_CODE_THREE_ADDR);
         _delay_ms(100);
       }
+      lbg.drawValue(20, 100);
+      _delay_ms(500);
+      lbg.drawValue(30, 100);
+      _delay_ms(500);
+      lbg.drawValue(40, 100);
+      _delay_ms(500);
+      lbg.drawValue(50, 100);
+      _delay_ms(500);
+      lbg.drawValue(60, 100);
       for (uint8_t i = 0; i <= 3; ++i)
       {
         // send_clear_command(STORED_TROUBLE_CODE_THREE_ADDR, STORED_TROUBLE_CODE_ONE_ADDR);
         _delay_ms(100);
       }
-
-      lcd.clear();
-      lcd.setCursor(0, 0);
-      lcd.print("action completed");
-      _delay_ms(2000);
+      lbg.drawValue(70, 100);
+      _delay_ms(500);
+      lbg.drawValue(80, 100);
+      _delay_ms(500);
+      lbg.drawValue(90, 100);
+      _delay_ms(500);
+      lbg.drawValue(100, 100);
+      _delay_ms(1000);
 
       lcd.clear();
       digitalWrite(LED_BUILTIN, LOW);
