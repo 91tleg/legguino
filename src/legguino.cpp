@@ -1,7 +1,7 @@
 #include "legguino.h"
 
 LiquidCrystal lcd(rs, en, d4, d5, d6, d7);
-LcdBarGraph lbg(&lcd, NUM_COLS);
+LcdBarGraph lbg(&lcd, NUM_COLS, 0, 0);
 
 extern uint8_t lcd_current_page;
 extern ecu_params ecu_parameters;
@@ -49,7 +49,7 @@ void setup()
   //{
   //   dump_address_space(0, 0xffff);
   // }
-  byte romid_buffer[3]; // Buffer to store ROM ID
+  uint8_t romid_buffer[3]; // Buffer to store rom id
   if (get_romid(romid_buffer))
   {
     for (uint8_t i = 0; i < 3; ++i)
@@ -57,12 +57,25 @@ void setup()
       ecu_parameters.romid_param[i] = romid_buffer[i];
     }
   }
-  lcd.print(F("ROM ID:"));
+  
+  lcd.print(F("ROM ID:"));/*
   lcd.print(ecu_parameters.romid_param[0]);
   lcd.print(".");
   lcd.print(ecu_parameters.romid_param[1]);
   lcd.print(".");
   lcd.print(ecu_parameters.romid_param[2]);
+*/
+for (uint8_t i = 0; i < 3; ++i)
+{
+    if (ecu_parameters.romid_param[i] < 0x10)
+    {
+        lcd.print("0");  // Print leading zero for single-digit hex values
+    }
+    lcd.print(ecu_parameters.romid_param[i], HEX);
+    {
+    if (i < 2) lcd.print(".");  // Add dots between bytes
+    }
+}
 
   _delay_ms(1500);
   lcd.clear();
@@ -479,40 +492,50 @@ void __attribute__((always_inline)) loop()
     if (btn2 == LOW && btn2_prev == HIGH)
     {
       digitalWrite(LED_BUILTIN, HIGH);
-      lcd.setCursor(0, 0);
-      lcd.print("CLEARING........");
-      _delay_ms(150);
       lcd.clear();
-      lcd.setCursor(0, 1);
-      lbg.drawValue(0, 100);
+      lcd.print("CLEARING........");
+      _delay_ms(1000);
+      //lcd.clear();
+
+      lbg.drawValue(0, 16);
       _delay_ms(400);
-      lbg.drawValue(10, 100);
+      lbg.drawValue(1, 16);
       for (uint8_t i = 0; i <= 3; ++i)
       {
         // send_clear_command(ACTIVE_TROUBLE_CODE_THREE_ADDR, ACTIVE_TROUBLE_CODE_THREE_ADDR);
         _delay_ms(100);
       }
-      lbg.drawValue(20, 100);
+      lbg.drawValue(2, 16);
       _delay_ms(500);
-      lbg.drawValue(30, 100);
+      lbg.drawValue(3, 16);
       _delay_ms(500);
-      lbg.drawValue(40, 100);
+      lbg.drawValue(4, 16);
       _delay_ms(500);
-      lbg.drawValue(50, 100);
+      lbg.drawValue(5, 16);
       _delay_ms(500);
-      lbg.drawValue(60, 100);
+      lbg.drawValue(7, 16);
       for (uint8_t i = 0; i <= 3; ++i)
       {
         // send_clear_command(STORED_TROUBLE_CODE_THREE_ADDR, STORED_TROUBLE_CODE_ONE_ADDR);
         _delay_ms(100);
       }
-      lbg.drawValue(70, 100);
+      lbg.drawValue(8, 16);
       _delay_ms(500);
-      lbg.drawValue(80, 100);
+      lbg.drawValue(9, 16);
       _delay_ms(500);
-      lbg.drawValue(90, 100);
+      lbg.drawValue(10, 16);
       _delay_ms(500);
-      lbg.drawValue(100, 100);
+      lbg.drawValue(11, 16);
+      _delay_ms(1000);
+      lbg.drawValue(12, 16);
+      _delay_ms(1000);
+      lbg.drawValue(13, 16);
+      _delay_ms(1000);
+      lbg.drawValue(14, 16);
+      _delay_ms(1000);
+      lbg.drawValue(15, 16);
+      _delay_ms(1000);
+      lbg.drawValue(16, 16);
       _delay_ms(1000);
 
       lcd.clear();
