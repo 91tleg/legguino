@@ -1,9 +1,17 @@
 #include "lcd.h"
 
-extern LiquidCrystal lcd;
-uint8_t lcd_current_page = 0;
+SCAN lcd_current_page = SCAN::SENSOR_ONE;
+MENU menu_current = MENU::SCAN_MODE;
+PARAMS param_current = PARAMS::PARAMS_ONE;
+DIAG diag_current = DIAG::IN;
+RACE race_current = RACE::TW;
+BIG big_current = BIG::BIG_ONE;
 
-void lcd_init(void)
+#ifdef LCD
+extern LiquidCrystal lcd;
+
+
+void init(void)
 {
     pinMode(A14, OUTPUT);
     pinMode(A13, OUTPUT);
@@ -19,8 +27,9 @@ void lcd_init(void)
     digitalWrite(A1, HIGH);
     lcd.begin(16, 2);
 
-    #if PRINT_DEBUG_MESSAGES_ON_LCD
-        lcd.print("lcd set up done");
-    #endif
-    
+#if PRINT_DEBUG_MESSAGES_ON_LCD
+    lcd.print("lcd set up done");
+#endif
 }
+
+#endif
