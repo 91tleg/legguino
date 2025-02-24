@@ -1,16 +1,8 @@
 #include "ssm1.h"
 
-// Initialize all to 0
-ecu_params ecu_parameters = {0};
-input_switches status = {0};
-io_switches status0 = {0};
-trouble_code_one status1 = {0};
-trouble_code_two status2 = {0};
-trouble_code_three status3 = {0};
-
 void stop_read(void)
 {
-    byte txbuf[4] = {0x12, 0x00, 0x00, 0x00};
+    uint8_t txbuf[4] = {0x12, 0x00, 0x00, 0x00};
     for (uint8_t i = 0; i < 4; ++i)
     {
         HWSerial.write(txbuf[i]);
@@ -19,11 +11,27 @@ void stop_read(void)
     _delay_ms(1000);
 }
 
-bool get_romid(byte *buffer)
+void display_romid(void)
 {
-    byte read_command[4] = {0x78, 0x00, 0x00, 0x00};
-    byte romid_command[4] = {0x00, 0x46, 0x48, 0x49};
-    byte romid[3] = {0};
+    for (uint8_t i = 0; i < 3; ++i)
+    {
+        if (ecu_parameters.romid_param[i] < 0x10)
+        {
+            lcd.print(0); // Print leading zero for single-digit hex values
+        }
+        lcd.print(ecu_parameters.romid_param[i], HEX);
+        if (i < 2)
+        {
+            lcd.write(static_cast<uint8_t>('.'));
+        }
+    }
+}
+
+bool get_romid(uint8_t *buffer)
+{
+    uint8_t read_command[4] = {0x78, 0x00, 0x00, 0x00};
+    uint8_t romid_command[4] = {0x00, 0x46, 0x48, 0x49};
+    uint8_t romid[3] = {0};
     stop_read();
 
     // HWSerial.clear();
@@ -36,15 +44,12 @@ bool get_romid(byte *buffer)
     read_until_no_more();
 
     int retries = 0;
-    while (retries < NUM_READ_TRIES)
+    while (retries < 3)
     {
         read_until_no_more();
         int nbytes = HWSerial.readBytes(romid, 3);
-
         if ((nbytes == 3) && (romid[0] != 0x00))
-        {
             break;
-        }
 
         // Ask for ROM ID
         for (uint8_t i = 0; i < 4; ++i)
@@ -55,9 +60,9 @@ bool get_romid(byte *buffer)
         HWSerial.flush();
         ++retries;
 
-        #if PRINT_DEBUG_MESSAGES_ON_USB
-            USBSerial.println("Testing ROM ID once again");
-        #endif
+#if PRINT_DEBUG_MESSAGES_ON_USB
+        USBSerial.println("Testing ROM ID once again");
+#endif
     }
     stop_read();
 
@@ -71,31 +76,30 @@ bool get_romid(byte *buffer)
     {
         buffer[i] = romid[i];
     }
-
     return true;
 }
 
 void query_romid(void)
 {
-    byte romid[3] = {0};
+    uint8_t romid[3] = {0};
     if (get_romid(romid))
     {
 
-        #if PRINT_DEBUG_MESSAGES_ON_USB
-            USBSerial.print("Received ROMID: ");
-            USBSerial.print(romid[0], HEX);
-            USBSerial.print(romid[1], HEX);
-            USBSerial.println(romid[2], HEX);
-        #endif
+#if PRINT_DEBUG_MESSAGES_ON_USB
+        USBSerial.print("Received ROMID: ");
+        USBSerial.print(romid[0], HEX);
+        USBSerial.print(romid[1], HEX);
+        USBSerial.println(romid[2], HEX);
+#endif
         read_until_no_more();
     }
 }
 
-byte read_data_from_address_ex(short addr, bool read_once_only)
+uint8_t read_data_from_address_ex(short addr, bool read_once_only)
 {
     // HWSerial.clear();
-    byte read_command[4] = {0x78, byte(addr >> 8), byte(addr & 0xff), 0x00};
-    byte answer[3] = {0};
+    uint8_t read_command[4] = {0x78, uint8_t(addr >> 8), uint8_t(addr & 0xff), 0x00};
+    uint8_t answer[3] = {0};
 
     for (uint8_t i = 0; i < 4; ++i)
     {
@@ -114,7 +118,7 @@ byte read_data_from_address_ex(short addr, bool read_once_only)
         return answer[2];
     }
 
-    uint8_t tries = NUM_READ_TRIES;
+    uint8_t tries = 3;
     while (answer[0] != read_command[1] || answer[1] != read_command[2])
     {
         if (!HWSerial.available())
@@ -128,7 +132,7 @@ byte read_data_from_address_ex(short addr, bool read_once_only)
                 {
                     HWSerial.write(read_command[i]);
                 }
-                tries = NUM_READ_TRIES;
+                tries = 3;
             }
         }
         HWSerial.readBytes(answer, 3);
@@ -145,37 +149,34 @@ byte read_data_from_address_ex(short addr, bool read_once_only)
     return answer[2];
 }
 
-static inline byte read_data_from_address(short addr)
+static inline uint8_t read_data_from_address(short addr)
 {
     return read_data_from_address_ex(addr, true);
 }
 
 static inline void read_battery_voltage(void)
 {
-    float value = read_data_from_address(BATTERY_VOLTAGE_ADDR) * 0.08;
-    ecu_parameters.vb = value;
+    ecu_parameters.vb = static_cast<float>(read_data_from_address(BATTERY_VOLTAGE_ADDR)) * 0.08;
 }
 
 static inline void read_speed(void)
 {
-    uint8_t value = read_data_from_address(SPEED_ADDR) * 1.6; // 2?
-    ecu_parameters.vsp = value;
+    ecu_parameters.vsp = read_data_from_address(SPEED_ADDR) * 16 / 10;
 }
 
 static inline void read_rpm(void)
 {
-    uint16_t value = read_data_from_address(RPM_ADDR) * 25;
-    ecu_parameters.erev = value;
+    ecu_parameters.erev = static_cast<uint16_t>(read_data_from_address(RPM_ADDR) * 25);
 }
 
-static inline void read_coolant_temp(void) 
+static inline void read_coolant_temp(void)
 {
-    int16_t value = pgm_read_byte(&coolant_look_up_table[read_data_from_address(COOLANT_ADDR)]);
-    if (value < 14) 
-    {   
+    int16_t value = static_cast<int16_t>(pgm_read_byte(&coolant_look_up_table[read_data_from_address(COOLANT_ADDR)]));
+    if (value < 14)
+    {
         value += 255;
     }
-    if (value > (255 - 29)) 
+    if (value > (255 - 29))
     {
         value = -value;
     }
@@ -184,26 +185,22 @@ static inline void read_coolant_temp(void)
 
 static inline void read_airflow(void)
 {
-    uint16_t value = (read_data_from_address(AIRFLOW_SENSOR_ADDR) * 100) / 256;
-    ecu_parameters.qa = value;
+    ecu_parameters.qa = static_cast<float>(read_data_from_address(AIRFLOW_SENSOR_ADDR) / 50);
 }
 
 static inline void read_throttle_percentage(void)
 {
-    uint16_t value = (read_data_from_address(THROTTLE_ADDR) * 100) / 256;
-    ecu_parameters.tps = value;
+    ecu_parameters.tps = (read_data_from_address(THROTTLE_ADDR) * 100) / 256;
 }
 
 static inline void read_throttle_signal(void)
 {
-    uint16_t value = read_data_from_address(THROTTLE_ADDR);
-    ecu_parameters.thv = value;
+    ecu_parameters.thv = read_data_from_address(THROTTLE_ADDR);
 }
 
 static inline void read_manifold_pressure(void)
 {
-    int16_t value = (read_data_from_address(MANIFOLD_PRESSURE_ADDR) / 0.128) - 1060;
-    ecu_parameters.manip  = value;
+    ecu_parameters.manip = static_cast<float>(read_data_from_address(MANIFOLD_PRESSURE_ADDR)) / 0.128 - 1060;
 }
 
 static inline void read_boost_control_duty_cycle(void)
@@ -264,306 +261,137 @@ void read_input_switches(void)
 {
     uint16_t value = read_data_from_address(INPUT_SWITCHES_ADDR);
     if (value & (1 << 7))
-    {
         status.ignition = 1;
-    }
     if (value & (1 << 6))
-    {
         status.auto_trans = 1;
-    }
     if (value & (1 << 5))
-    {
         status.test_mode = 1;
-    }
     if (value & (1 << 4))
-    {
         status.read_mode = 1;
-    }
     if (value & (1 << 2))
-    {
         status.neutral = 1;
-    }
     if (value & (1 << 1))
-    {
         status.park = 1;
-    }
     if (value & (1 << 0))
-    {
         status.california = 1;
-    }
 }
 
 void read_io_switches(void)
 {
     uint16_t value = read_data_from_address(IO_SWITCHES_ADDR);
     if (value & (1 << 7))
-    {
         status0.idle_sw = 1;
-    }
     if (value & (1 << 6))
-    {
         status0.ac_sw = 1;
-    }
     if (value & (1 << 5))
-    {
         status0.ac_relay = 1;
-    }
     if (value & (1 << 4))
-    {
         status0.rad_fan = 1;
-    }
     if (value & (1 << 3))
-    {
         status0.fuel_pump = 1;
-    }
     if (value & (1 << 2))
-    {
         status0.purge_valve = 1;
-    }
     if (value & (1 << 1))
-    {
         status0.pinging = 1;
-    }
-    if (value & (1 << 0)) 
-    {
+    if (value & (1 << 0))
         status0.press_exch = 1;
-    }
 }
 
-  /*
-   * The current codes are stored as bit flags in locations 0x1026 through 0x1029 and the previous codes are stored
-   * in locations 0x12B9 through 0x12BC.
-   *
-   *            Bit7	      Bit6	       Bit5	      Bit4	          Bit3	      Bit2	      Bit1	      Bit0
-   * 1026/12B9	Crank(11)	  Starter(12)	 Cam(13)	  TPS(31)	        O2Right(32)	H2OTemp(21)	Knock1(22)	MAF(23)
-   * 1027/12BA	Atmos(45)	  Knock2(28)	 Bypass(24) EGRvalve(34)    VSS2(33)	  O2Left(37)	Purge(35)	  AFlearn(41)
-   * 1028/12BB	Inj5(18)	  P-switch(52) Inj6(19)	  N-switch(51)    Inj4(17)	  Inj3(16)	  Inj2(15)	  Inj1(14)
-   * 1029/12BC	n/a	        n/a	         n/a	      CO Resistor(49)	TqSig(38)	  EGRsys(56)	Crank2(29)	EGRtemp(55)
-   *
-   * As an example, suppose location 0x1026 contains the value 0x48. That is 01001000 in binary. This indicates
-   * errors with the Starter (Code 12) and Right O2 Sensor (Code 32).
-   * 
-   * 
-   * LEG:
-   *            Bit7	      Bit6	       Bit5	      Bit4	          Bit3	      Bit2	      Bit1	      Bit0
-   * 1026/12B9	Crank(11)	  Starter(12)	 Cam(13)	  TPS(31)	        O2Right(32)	H2OTemp(21)	Knock1(22)	MAF(23)
-   * 1027/12BA	Atmos(45)	  n/a       	 IACV(24)   n/a             VSS(33)	    n/a       	Purge(35)	  AFlearn(41)
-   * 1028/12BB	n/a     	  P-switch(52) n/a     	  N-switch(51)    Inj4(17)	  Inj3(16)	  Inj2(15)	  Inj1(14)
-   * 1029/12BC	n/a	        n/a	         n/a	      WrongMAF(49)   	n/a     	  n/a        	n/a       	n/a
-   * 
-   */
+void read_trouble_code_one(uint16_t addr)
+{
+    uint16_t value = read_data_from_address(addr);
+    if (value & (1 << 7))
+        status1.crank = 1;
+    if (value & (1 << 6))
+        status1.starter = 1;
+    if (value & (1 << 5))
+        status1.cam = 1;
+    if (value & (1 << 4))
+        status1.inj_1 = 1;
+    if (value & (1 << 3))
+        status1.inj_2 = 1;
+    if (value & (1 << 2))
+        status1.inj_3 = 1;
+    if (value & (1 << 1))
+        status1.inj_4 = 1;
+}
 
 void read_active_trouble_code_one(void)
 {
-    uint16_t value = read_data_from_address(ACTIVE_TROUBLE_CODE_ONE_ADDR);
-    if (value & (1 << 7))
-    {
-        status1.crank = 1;
-    }
-    if (value & (1 << 6))
-    {
-        status1.starter = 1;
-    }
-    if (value & (1 << 5))
-    {
-        status1.cam = 1;
-    }
-    if (value & (1 << 4))
-    {
-        status1.inj_1 = 1;
-    }
-    if (value & (1 << 3))
-    {
-        status1.inj_2 = 1;
-    }
-    if (value & (1 << 2))
-    {
-        status1.inj_3 = 1;
-    }
-    if (value & (1 << 1))
-    {
-        status1.inj_4 = 1;
-    }
-}
-
-void read_active_trouble_code_two(void)
-{
-    uint16_t value = read_data_from_address(ACTIVE_TROUBLE_CODE_TWO_ADDR);
-    if (value & (1 << 7))
-    {
-        status2.temp = 1;
-    }
-    if (value & (1 << 6)) 
-    {
-        status2.knock = 1;
-    }
-    if (value & (1 << 5))
-    {
-        status2.maf = 1;
-    }
-    if (value & (1 << 4)) 
-    {
-        status2.iacv = 1;
-    }
-    if (value & (1 << 3))
-    {
-        status2.tps = 1;
-    }
-    if (value & (1 << 2)) 
-    {
-        status2.oxygen = 1;
-    }
-    if (value & (1 << 1))
-    {
-        status2.vss = 1;
-    }
-    if (value & (1 << 0))
-    {
-        status2.purge = 1;
-    }
-}
-
-void read_active_trouble_code_three(void)
-{
-    uint16_t value = read_data_from_address(ACTIVE_TROUBLE_CODE_ONE_ADDR);
-    if (value & (1 << 7)) 
-    {
-        status3.fuel_trim = 1;
-    }
-    if (value & (1 << 6))
-    {
-        status3.idle_sw = 1;
-    }
-    // if (value & (1 << 5)) {}
-    if (value & (1 << 4))
-    {
-        status3.wgc = 1;
-    }
-    if (value & (1 << 3))
-    {
-        status3.baro = 1;
-    }
-    if (value & (1 << 2))
-    {
-        status3.wrong_maf = 1;
-    }
-    if (value & (1 << 1))
-    {
-        status3.neutral_sw = 1;
-    }
-    if (value & (1 << 0))
-    {
-        status3.parking_sw = 1;
-    }
+    read_trouble_code_one(ACTIVE_TROUBLE_CODE_ONE_ADDR);
 }
 
 void read_stored_trouble_code_one(void)
 {
-    uint16_t value = read_data_from_address(STORED_TROUBLE_CODE_THREE_ADDR);
+    read_trouble_code_one(STORED_TROUBLE_CODE_THREE_ADDR);
+}
+
+void read_trouble_code_two(uint16_t addr)
+{
+    uint16_t value = read_data_from_address(addr);
     if (value & (1 << 7))
-    {
-        status1.crank = 1;
-    }
+        status2.temp = 1;
     if (value & (1 << 6))
-    {
-        status1.starter = 1;
-    }
+        status2.knock = 1;
     if (value & (1 << 5))
-    {
-        status1.cam = 1;
-    }
+        status2.maf = 1;
     if (value & (1 << 4))
-    {
-        status1.inj_1 = 1;
-    }
+        status2.iacv = 1;
     if (value & (1 << 3))
-    {
-        status1.inj_2 = 1;
-    }
+        status2.tps = 1;
     if (value & (1 << 2))
-    {
-        status1.inj_3 = 1;
-    }
+        status2.oxygen = 1;
     if (value & (1 << 1))
-    {
-        status1.inj_4 = 1;
-    }
+        status2.vss = 1;
+    if (value & (1 << 0))
+        status2.purge = 1;
+}
+
+void read_active_trouble_code_two(void)
+{
+    read_trouble_code_two(ACTIVE_TROUBLE_CODE_TWO_ADDR);
 }
 
 void read_stored_trouble_code_two(void)
 {
-    uint16_t value = read_data_from_address(STORED_TROUBLE_CODE_TWO_ADDR);
+    read_trouble_code_two(STORED_TROUBLE_CODE_TWO_ADDR);
+}
+
+void read_trouble_code_three(uint16_t addr)
+{
+    uint16_t value = read_data_from_address(addr);
     if (value & (1 << 7))
-    {
-        status2.temp = 1;
-    }
-    if (value & (1 << 6)) 
-    {
-        status2.knock = 1;
-    }
-    if (value & (1 << 5))
-    {
-        status2.maf = 1;
-    }
-    if (value & (1 << 4)) 
-    {
-        status2.iacv = 1;
-    }
+        status3.fuel_trim = 1;
+    if (value & (1 << 6))
+        status3.idle_sw = 1;
+    if (value & (1 << 4))
+        status3.wgc = 1;
     if (value & (1 << 3))
-    {
-        status2.tps = 1;
-    }
-    if (value & (1 << 2)) 
-    {
-        status2.oxygen = 1;
-    }
+        status3.baro = 1;
+    if (value & (1 << 2))
+        status3.wrong_maf = 1;
     if (value & (1 << 1))
-    {
-        status2.vss = 1;
-    }
+        status3.neutral_sw = 1;
     if (value & (1 << 0))
-    {
-        status2.purge = 1;
-    }
+        status3.parking_sw = 1;
+}
+
+void read_active_trouble_code_three(void)
+{
+    read_trouble_code_three(ACTIVE_TROUBLE_CODE_THREE_ADDR);
 }
 
 void read_stored_trouble_code_three(void)
 {
-    uint16_t value = read_data_from_address(STORED_TROUBLE_CODE_ONE_ADDR);
-    if (value & (1 << 7)) 
-    {
-        status3.fuel_trim = 1;
-    }
-    if (value & (1 << 6))
-    {
-        status3.idle_sw = 1;
-    }
-    if (value & (1 << 4))
-    {
-        status3.wgc = 1;
-    }
-    if (value & (1 << 3))
-    {
-        status3.baro = 1;
-    }
-    if (value & (1 << 2))
-    {
-        status3.wrong_maf = 1;
-    }
-    if (value & (1 << 1))
-    {
-        status3.neutral_sw = 1;
-    }
-    if (value & (1 << 0))
-    {
-        status3.parking_sw = 1;
-    }
+    read_trouble_code_three(STORED_TROUBLE_CODE_THREE_ADDR);
 }
 
-void send_clear_command(uint16_t addr_high, uint16_t addr_low) 
+// AA MSB LSB 00   (Clear to Zero)
+// AA MSB LSB FF   (If inverted value is used)
+void send_clear_command(uint16_t addr_high, uint16_t addr_low)
 {
     Serial.write(0xAA);
-    Serial.write(addr_high);  // High byte of address
+    Serial.write(addr_high); // High byte of address
     Serial.write(addr_low);  // Low byte of address
-    Serial.write(0x00);  // Clear value 
+    Serial.write(0x00);      // Clear value
 }
