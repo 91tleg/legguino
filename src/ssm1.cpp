@@ -185,17 +185,17 @@ static inline void read_coolant_temp(void)
 
 static inline void read_airflow(void)
 {
-    ecu_parameters.qa = static_cast<float>(read_data_from_address(AIRFLOW_SENSOR_ADDR) / 50);
+    ecu_parameters.qa = static_cast<float>(read_data_from_address(AIRFLOW_SENSOR_ADDR)) / 50;
 }
 
 static inline void read_throttle_percentage(void)
 {
-    ecu_parameters.tps = (read_data_from_address(THROTTLE_ADDR) * 100) / 256;
+    ecu_parameters.tps = read_data_from_address(THROTTLE_ADDR);
 }
 
 static inline void read_throttle_signal(void)
 {
-    ecu_parameters.thv = read_data_from_address(THROTTLE_ADDR);
+    ecu_parameters.thv = static_cast<float>(read_data_from_address(THROTTLE_ADDR) * 100) / 256;
 }
 
 static inline void read_manifold_pressure(void)
@@ -205,61 +205,52 @@ static inline void read_manifold_pressure(void)
 
 static inline void read_boost_control_duty_cycle(void)
 {
-    uint16_t value = (read_data_from_address(BOOST_SOLENOID_ADDR) * 100) / 256;
-    ecu_parameters.wgc = value;
+    ecu_parameters.wgc = static_cast<float>(read_data_from_address(BOOST_SOLENOID_ADDR) * 100) / 256;
 }
 
 static inline void read_ignition_timing(void)
 {
-    uint16_t value = read_data_from_address(IGNITION_ADVANCE_ADDR);
-    ecu_parameters.advs = value;
+    ecu_parameters.advs = read_data_from_address(IGNITION_ADVANCE_ADDR);
 }
 
 static inline void read_load(void)
 {
-    uint16_t value = read_data_from_address(ENGINE_LOAD_ADDR);
-    ecu_parameters.ldata = value;
+    ecu_parameters.ldata = read_data_from_address(ENGINE_LOAD_ADDR);
 }
 
 static inline void read_injector_pulse_width(void)
 {
-    uint16_t value = read_data_from_address(INJECTOR_PULSE_WIDTH_ADDR) * 2.048;
-    ecu_parameters.tim = value;
+    ecu_parameters.tim = static_cast<float>(read_data_from_address(INJECTOR_PULSE_WIDTH_ADDR)) * 2.048;
 }
 
 static inline void read_iacv_duty_cycle(void)
 {
-    uint16_t value = read_data_from_address(ISU_DUTY_VALVE_ADDR) / 2;
-    ecu_parameters.isc = value;
+    ecu_parameters.isc = read_data_from_address(ISU_DUTY_VALVE_ADDR) / 2;
 }
 
 static inline void read_o2_signal(void)
 {
-    uint16_t value = read_data_from_address(O2_AVERAGE_ADDR) / 100;
-    ecu_parameters.o2r = value;
+    ecu_parameters.o2r = static_cast<float>(read_data_from_address(O2_AVERAGE_ADDR)) / 100;
 }
 
 static inline void read_timing_correction(void)
 {
-    uint16_t value = read_data_from_address(AF_CORRECTION_ADDR);
-    ecu_parameters.rtrd = value;
+    ecu_parameters.rtrd = read_data_from_address(TIMING_CORRECTION_ADDR);
 }
 
 static inline void read_fuel_trim(void)
 {
-    uint16_t value = (read_data_from_address(AF_CORRECTION_ADDR) - 128) / 1.28;
-    ecu_parameters.alphar = value;
+    ecu_parameters.alphar = static_cast<float>(read_data_from_address(AF_CORRECTION_ADDR) - 128) / 1.28;
 }
 
 static inline void read_atmosphere_pressure(void)
 {
-    uint16_t value = (930 - read_data_from_address(ATMOSPHERIC_PRESSURE_ADDR)) * 3.09;
-    ecu_parameters.barop = value;
+    ecu_parameters.barop = static_cast<float>(930 - read_data_from_address(ATMOSPHERIC_PRESSURE_ADDR)) * 3.09;
 }
 
 void read_input_switches(void)
 {
-    uint16_t value = read_data_from_address(INPUT_SWITCHES_ADDR);
+    uint8_t value = read_data_from_address(INPUT_SWITCHES_ADDR);
     if (value & (1 << 7))
         status.ignition = 1;
     if (value & (1 << 6))
@@ -278,7 +269,7 @@ void read_input_switches(void)
 
 void read_io_switches(void)
 {
-    uint16_t value = read_data_from_address(IO_SWITCHES_ADDR);
+    uint8_t value = read_data_from_address(IO_SWITCHES_ADDR);
     if (value & (1 << 7))
         status0.idle_sw = 1;
     if (value & (1 << 6))
@@ -299,7 +290,7 @@ void read_io_switches(void)
 
 void read_trouble_code_one(uint16_t addr)
 {
-    uint16_t value = read_data_from_address(addr);
+    uint8_t value = read_data_from_address(addr);
     if (value & (1 << 7))
         status1.crank = 1;
     if (value & (1 << 6))
@@ -328,7 +319,7 @@ void read_stored_trouble_code_one(void)
 
 void read_trouble_code_two(uint16_t addr)
 {
-    uint16_t value = read_data_from_address(addr);
+    uint8_t value = read_data_from_address(addr);
     if (value & (1 << 7))
         status2.temp = 1;
     if (value & (1 << 6))
@@ -359,7 +350,7 @@ void read_stored_trouble_code_two(void)
 
 void read_trouble_code_three(uint16_t addr)
 {
-    uint16_t value = read_data_from_address(addr);
+    uint8_t value = read_data_from_address(addr);
     if (value & (1 << 7))
         status3.fuel_trim = 1;
     if (value & (1 << 6))
