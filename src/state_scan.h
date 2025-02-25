@@ -3,9 +3,6 @@
 
 #include <Arduino.h>
 #include "state_diag.h"
-#include "legguino.h"
-
-extern io_switches status0;
 
 enum class SCAN : uint8_t 
 {
@@ -23,5 +20,7 @@ enum class SCAN : uint8_t
   /* 11 */ STORED_TC_THREE,
   /* 12 */ CLEAR_TC
 };
+
+extern SCAN lcd_current_page;
 
 #endif // STATE_SCAN_H
