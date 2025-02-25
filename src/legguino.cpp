@@ -1,24 +1,9 @@
 #include "legguino.h"
 
-LiquidCrystal_I2C lcd(I2C_ADDR, LCD_COLS, LCD_ROWS);
-// BigNumbers_I2C bn(&lcd);
-// LcdBarGraph lbg(&lcd, LCD_COLS, 0, 0);
+char buffer[32];
 
-extern MENU menu_current;
-extern SCAN lcd_current_page;
-extern PARAMS param_current;
-extern DIAG diag_current;
-extern RACE race_current;
-extern ecu_params ecu_parameters;
-extern input_switches status;
-extern io_switches status0;
-extern trouble_code_one status1;
-extern trouble_code_two status2;
-extern trouble_code_three status3;
-extern uint8_t btn1;
-extern uint8_t btn1_prev;
-extern uint8_t btn2;
-extern uint8_t btn2_prev;
+LiquidCrystal_I2C lcd(0x27, 16, 2);
+// LcdBarGraph lbg(&lcd, LCD_COLS, 0, 0);
 
 void setup()
 {
@@ -32,12 +17,7 @@ void setup()
     query_romid();
 #endif
 
-    // char cmd[4] = {0};
-    // USBSerial.readBytes(cmd, 4);
-    // if (!strncmp(cmd, "DUMP", 4))
-    //{
-    //   dump_address_space(0, 0xffff);
-    // }
+    lcd.setCursor(0, 0);
     uint8_t romid_buffer[3] = {0}; // Buffer to store rom id
     if (get_romid(romid_buffer))
     {
@@ -45,47 +25,17 @@ void setup()
         {
             ecu_parameters.romid_param[i] = romid_buffer[i];
         }
+        lcd.print("ROM ID: ");
+        display_romid();
     }
-
-    lcd.setCursor(0, 0);
-    lcd.print(F("ROM ID: "));
-    display_romid(&lcd);
-
-    _delay_ms(5000);
-    lcd.clear();
-    lcd.setCursor(2, 0);
-    lcd.print("SELECT MODE:");
-
-    while (true)
+    else
     {
-        btn_read();
-        display_menu(menu_current, &lcd);
-        // Button handling
-        if (btn1 == LOW && btn1_prev == HIGH)
-        {
-            PORTB |= (1 << PB7);
-            _delay_ms(100);
-            PORTB &= ~(1 << PB7);
-            menu_current = static_cast<MENU>(static_cast<uint8_t>(menu_current) + 1);
-
-            // Return to page 0
-            if (menu_current > MENU::COMPASS_MODE)
-            {
-                menu_current = MENU::SCAN_MODE;
-            }
-        }
-        if (btn2 == LOW && btn2_prev == HIGH)
-        {
-            PORTB |= (1 << PB7);
-            _delay_ms(100);
-            PORTB &= ~(1 << PB7);
-            lcd.clear();
-            break;
-        }
-        btn1_prev = btn1;
-        btn2_prev = btn2;
-        _delay_ms(200);
+        lcd.print(F("ERROR"));
     }
+    _delay_ms(5000);
+    lcd.setCursor(0, 0);
+    lcd.print("  SELECT MODE:");
+    select_mode();
 
 #if TEST
     int index = 0;
@@ -112,260 +62,148 @@ void setup()
 #pragma GCC diagnostic ignored "-Wattributes"
 void __attribute__((always_inline)) loop()
 {
-    if (lcd_current_page > SCAN::CLEAR_TC)
-    {
-        lcd_current_page = SCAN::SENSOR_ONE;
-    }
-    btn1 = digitalRead(BUTTON1_PIN);
-    if (btn1 == LOW && btn1_prev == HIGH)
-    {
-        PORTB |= (1 << PB7);
-        _delay_ms(500);
-        PORTB &= ~(1 << PB7);
-        lcd_current_page = static_cast<SCAN>(static_cast<uint8_t>(lcd_current_page) + 1);
-    }
-    btn1_prev = digitalRead(BUTTON1_PIN);
 
     switch (menu_current)
     {
     case MENU::SCAN_MODE:
-
+        if (lcd_current_page > SCAN::CLEAR_TC)
+            lcd_current_page = SCAN::SENSOR_ONE;
+        btn1 = digitalRead(BUTTON1_PIN);
+        if (btn1 == LOW && btn1_prev == HIGH)
+        {
+            PORTB |= (1 << PB7);
+            _delay_ms(100);
+            PORTB &= ~(1 << PB7);
+            lcd_current_page = static_cast<SCAN>(static_cast<uint8_t>(lcd_current_page) + 1);
+        }
+        btn1_prev = digitalRead(BUTTON1_PIN);
         switch (lcd_current_page)
         {
         case SCAN::SENSOR_ONE:
-            read_sensor_one();
+            // read_sensor_one();
             lcd.setCursor(0, 0);
-            lcd.print("VB: ");
-            lcd.print(ecu_parameters.vb);
+            lcd.print("VB:");
+            lcd.print(ecu_parameters.vb, 1);
             lcd.setCursor(8, 0);
-            lcd.print("SPD:" + ecu_parameters.vsp);
+            sprintf(buffer, "SPD:%d", ecu_parameters.vsp);
+            lcd.print(buffer);
             lcd.setCursor(0, 1);
-            lcd.print("REV:" + ecu_parameters.erev);
-            lcd.setCursor(8, 1);
-            lcd.print("TW: " + ecu_parameters.tw);
+            sprintf(buffer, "R:%d     TW:%d", ecu_parameters.erev, ecu_parameters.tw);
+            lcd.print(buffer);
             break;
         case SCAN::SENSOR_TWO:
-            read_sensor_two();
+            // read_sensor_two();
             lcd.setCursor(0, 0);
-            lcd.print("ADV:" + ecu_parameters.alphar);
+            lcd.print("ADV:");
+            lcd.print(ecu_parameters.alphar, 1);
             lcd.setCursor(8, 0);
             lcd.print("MAF:");
-            lcd.print(ecu_parameters.qa);
+            lcd.print(ecu_parameters.qa, 1);
             lcd.setCursor(0, 1);
-            lcd.print("LD: " + ecu_parameters.ldata);
-            lcd.setCursor(8, 1);
-            lcd.print("TPS:" + ecu_parameters.tps);
+            sprintf(buffer, "LD:%d    TPS:%d", ecu_parameters.ldata, ecu_parameters.tps);
+            lcd.print(buffer);
             break;
         case SCAN::SENSOR_THREE:
-            read_sensor_three();
+            // read_sensor_three();
             lcd.setCursor(0, 0);
-            lcd.print("IPW:" + ecu_parameters.tim);
+            lcd.print("IPW:");
+            lcd.print(ecu_parameters.tim, 1);
             lcd.setCursor(8, 0);
-            lcd.print("ISC:" + ecu_parameters.isc);
+            lcd.print("O2R:");
+            lcd.print(ecu_parameters.o2r, 1);
             lcd.setCursor(0, 1);
-            lcd.print("O2R:" + ecu_parameters.o2r);
-            lcd.setCursor(8, 1);
-            lcd.print("RTD:" + ecu_parameters.advs);
+            sprintf(buffer, "ISC:%d   RTD:%d", ecu_parameters.isc, ecu_parameters.advs);
+            lcd.print(buffer);
             break;
         case SCAN::SENSOR_FOUR:
-            read_sensor_four();
+            // read_sensor_four();
             lcd.setCursor(0, 0);
-            lcd.print("BAR:" + ecu_parameters.barop);
+            lcd.print("BAR:");
+            lcd.print(ecu_parameters.barop, 1);
             lcd.setCursor(8, 0);
-            lcd.print("MP: ");
-            lcd.print(ecu_parameters.manip);
+            lcd.print("MP:");
+            lcd.print(ecu_parameters.manip, 1);
             lcd.setCursor(0, 1);
-            lcd.print("WGC:" + ecu_parameters.wgc);
+            lcd.print("WGC:");
+            lcd.print(ecu_parameters.wgc, 1);
             lcd.setCursor(8, 1);
-            lcd.print("THV:" + ecu_parameters.thv);
+            lcd.print("THV:");
+            lcd.print(ecu_parameters.thv, 1);
             break;
         case SCAN::INPUT_SW:
-            read_input_switches();
+            // read_input_switches();
+            sprintf(buffer, "IG%d AT%d TM%d RM%d", status.ignition, status.auto_trans, status.test_mode, status.read_mode);
             lcd.setCursor(0, 0);
-            lcd.print("IG" + status.ignition);
-            lcd.setCursor(4, 0);
-            lcd.print("AT" + status.auto_trans);
-            lcd.setCursor(8, 0);
-            lcd.print("TM" + status.test_mode);
-            lcd.setCursor(12, 0);
-            lcd.print("RM" + status.read_mode);
+            lcd.print(buffer);
+            sprintf(buffer, "NT%d PK%d CA%d     ", status.neutral, status.park, status.california);
             lcd.setCursor(0, 1);
-            lcd.print("NT" + status.neutral);
-            lcd.setCursor(4, 1);
-            lcd.print("PK" + status.park);
-            lcd.setCursor(8, 1);
-            lcd.print("CA" + status.california);
+            lcd.print(buffer);
             break;
         case SCAN::IO_SW:
-            read_io_switches();
+            // read_io_switches();
+            sprintf(buffer, "ID%d AC%d AR%d RF%d", status0.idle_sw, status0.ac_sw, status0.ac_relay, status0.rad_fan);
             lcd.setCursor(0, 0);
-            lcd.print("ID" + status0.idle_sw);
-            lcd.setCursor(4, 0);
-            lcd.print("AC" + status0.ac_sw);
-            lcd.setCursor(8, 0);
-            lcd.print("AR" + status0.ac_relay);
-            lcd.setCursor(12, 0);
-            lcd.print("RF" + status0.rad_fan);
+            lcd.print(buffer);
+            sprintf(buffer, "FP%d CN%d KS%d PX%d", status0.fuel_pump, status0.purge_valve, status0.pinging, status0.press_exch);
             lcd.setCursor(0, 1);
-            lcd.print("FP" + status0.fuel_pump);
-            lcd.setCursor(4, 1);
-            lcd.print("CN" + status0.purge_valve);
-            lcd.setCursor(8, 1);
-            lcd.print("KS" + status0.pinging);
-            lcd.setCursor(12, 1);
-            lcd.print("PX" + status0.press_exch);
+            lcd.print(buffer);
             break;
         case SCAN::ACTIVE_TC_ONE:
-            read_active_trouble_code_one();
+            // read_active_trouble_code_one();
+            sprintf(buffer, "11%d 12%d 13%d 14%d", status1.crank, status1.starter, status1.cam, status1.inj_1);
             lcd.setCursor(0, 0);
-            lcd.print(11);
-            lcd.print(status1.crank);
-            lcd.setCursor(4, 0);
-            lcd.print(12);
-            lcd.print(status1.starter);
-            lcd.setCursor(8, 0);
-            lcd.print(13);
-            lcd.print(status1.cam);
-            lcd.setCursor(12, 0);
-            lcd.print(14);
-            lcd.print(status1.inj_1);
+            lcd.print(buffer);
+            sprintf(buffer, "15%d 16%d 17%d", status1.inj_2, status1.inj_3, status1.inj_4);
             lcd.setCursor(0, 1);
-            lcd.print(15);
-            lcd.print(status1.inj_2);
-            lcd.setCursor(4, 1);
-            lcd.print(16);
-            lcd.print(status1.inj_3);
-            lcd.setCursor(8, 1);
-            lcd.print(17);
-            lcd.print(status1.inj_4);
+            lcd.print(buffer);
             break;
         case SCAN::ACTIVE_TC_TWO:
-            read_active_trouble_code_two();
+            // read_active_trouble_code_two();
+            sprintf(buffer, "21%d 22%d 23%d 24%d", status2.temp, status2.knock, status2.maf, status2.iacv);
             lcd.setCursor(0, 0);
-            lcd.print(18);
-            lcd.print(status2.temp);
-            lcd.setCursor(4, 0);
-            lcd.print(22);
-            lcd.print(status2.knock);
-            lcd.setCursor(8, 0);
-            lcd.print(23);
-            lcd.print(status2.maf);
-            lcd.setCursor(12, 0);
-            lcd.print(45);
-            lcd.print(status2.iacv);
+            lcd.print(buffer);
+            sprintf(buffer, "31%d 32%d 33%d 35%d", status2.tps, status2.oxygen, status2.vss, status2.purge);
             lcd.setCursor(0, 1);
-            lcd.print(31);
-            lcd.print(status2.tps);
-            lcd.setCursor(4, 1);
-            lcd.print(32);
-            lcd.print(status2.oxygen);
-            lcd.setCursor(8, 1);
-            lcd.print(33);
-            lcd.print(status2.vss);
-            lcd.setCursor(12, 1);
-            lcd.print(35);
-            lcd.print(status2.purge);
+            lcd.print(buffer);
             break;
         case SCAN::ACTIVE_TC_THREE:
-            read_active_trouble_code_three();
+            // read_active_trouble_code_three();
+            sprintf(buffer, "41%d 42%d 44%d 45%d", status3.fuel_trim, status3.idle_sw, status3.wgc, status3.baro);
             lcd.setCursor(0, 0);
-            lcd.print(41);
-            lcd.print(status3.fuel_trim);
-            lcd.setCursor(4, 0);
-            lcd.print(42);
-            lcd.print(status3.idle_sw);
-            lcd.setCursor(8, 0);
-            lcd.print(44);
-            lcd.print(status3.wgc);
-            lcd.setCursor(12, 0);
-            lcd.print(45);
-            lcd.print(status3.baro);
+            lcd.print(buffer);
+            sprintf(buffer, "49%d 51%d 52%d", status3.wrong_maf, status3.neutral_sw, status3.parking_sw);
             lcd.setCursor(0, 1);
-            lcd.print(49);
-            lcd.print(status3.wrong_maf);
-            lcd.setCursor(4, 1);
-            lcd.print(51);
-            lcd.print(status3.neutral_sw);
-            lcd.setCursor(8, 1);
-            lcd.print(52);
-            lcd.print(status3.parking_sw);
+            lcd.print(buffer);
             break;
         case SCAN::STORED_TC_ONE:
-            read_stored_trouble_code_one();
+            // read_stored_trouble_code_one();
+            sprintf(buffer, "11%d 12%d 13%d 14%d", status1.crank, status1.starter, status1.cam, status1.inj_1);
             lcd.setCursor(0, 0);
-            lcd.print(11);
-            lcd.print(status1.crank);
-            lcd.setCursor(4, 0);
-            lcd.print(12);
-            lcd.print(status1.starter);
-            lcd.setCursor(8, 0);
-            lcd.print(13);
-            lcd.print(status1.cam);
-            lcd.setCursor(12, 0);
-            lcd.print(14);
-            lcd.print(status1.inj_1);
+            lcd.print(buffer);
+            sprintf(buffer, "15%d 16%d 17%d", status1.inj_2, status1.inj_3, status1.inj_4);
             lcd.setCursor(0, 1);
-            lcd.print(15);
-            lcd.print(status1.inj_2);
-            lcd.setCursor(4, 1);
-            lcd.print(16);
-            lcd.print(status1.inj_3);
-            lcd.setCursor(8, 1);
-            lcd.print(17);
-            lcd.print(status1.inj_4);
+            lcd.print(buffer);
             break;
         case SCAN::STORED_TC_TWO:
-            read_stored_trouble_code_two();
+            // read_stored_trouble_code_two();
+            sprintf(buffer, "21%d 22%d 23%d 24%d", status2.temp, status2.knock, status2.maf, status2.iacv);
             lcd.setCursor(0, 0);
-            lcd.print(21);
-            lcd.print(status2.temp);
-            lcd.setCursor(4, 0);
-            lcd.print(22);
-            lcd.print(status2.knock);
-            lcd.setCursor(8, 0);
-            lcd.print(23);
-            lcd.print(status2.maf);
-            lcd.setCursor(12, 0);
-            lcd.print(45);
-            lcd.print(status2.iacv);
+            lcd.print(buffer);
+            sprintf(buffer, "31%d 32%d 33%d 35%d", status2.tps, status2.oxygen, status2.vss, status2.purge);
             lcd.setCursor(0, 1);
-            lcd.print(31);
-            lcd.print(status2.tps);
-            lcd.setCursor(4, 1);
-            lcd.print(32);
-            lcd.print(status2.oxygen);
-            lcd.setCursor(8, 1);
-            lcd.print(33);
-            lcd.print(status2.vss);
-            lcd.setCursor(12, 1);
-            lcd.print(35);
-            lcd.print(status2.purge);
+            lcd.print(buffer);
             break;
         case SCAN::STORED_TC_THREE:
-            read_stored_trouble_code_three();
+            // read_stored_trouble_code_three();
+            sprintf(buffer, "41%d 42%d 44%d 45%d", status3.fuel_trim, status3.idle_sw, status3.wgc, status3.baro);
             lcd.setCursor(0, 0);
-            lcd.print(41);
-            lcd.print(status3.fuel_trim);
-            lcd.setCursor(4, 0);
-            lcd.print(42);
-            lcd.print(status3.idle_sw);
-            lcd.setCursor(8, 0);
-            lcd.print(44);
-            lcd.print(status3.wgc);
-            lcd.setCursor(12, 0);
-            lcd.print(45);
-            lcd.print(status3.baro);
+            lcd.print(buffer);
+            sprintf(buffer, "49%d 51%d 52%d", status3.wrong_maf, status3.neutral_sw, status3.parking_sw);
             lcd.setCursor(0, 1);
-            lcd.print(49);
-            lcd.print(status3.wrong_maf);
-            lcd.setCursor(4, 1);
-            lcd.print(51);
-            lcd.print(status3.neutral_sw);
-            lcd.setCursor(8, 1);
-            lcd.print(52);
-            lcd.print(status3.parking_sw);
+            lcd.print(buffer);
             break;
         case SCAN::CLEAR_TC:
+            lcd.clear();
             lcd.setCursor(2, 0);
             lcd.print("CLEAR CODES?");
             btn2 = digitalRead(BUTTON2_PIN);
@@ -373,6 +211,9 @@ void __attribute__((always_inline)) loop()
             {
                 lcd.setCursor(0, 0);
                 lcd.print("CLEARING........");
+                // CLEAR
+                // CLEAR
+                // CLEAR
                 PORTB |= (1 << PB7);
                 _delay_ms(1000);
                 PORTB &= ~(1 << PB7);
@@ -383,60 +224,91 @@ void __attribute__((always_inline)) loop()
             btn2_prev = digitalRead(BUTTON2_PIN);
             break;
         }
-        _delay_ms(150);
-        lcd.clear();
         break;
 
     case MENU::PARAMS_MODE:
+        if (param_current > PARAMS::PARAMS_ONE)
+            param_current = PARAMS::PARAMS_EIGHT;
+        btn1 = digitalRead(BUTTON1_PIN);
+        if (btn1 == LOW && btn1_prev == HIGH)
+        {
+            PORTB |= (1 << PB7);
+            _delay_ms(100);
+            PORTB &= ~(1 << PB7);
+            param_current = static_cast<PARAMS>(static_cast<uint8_t>(param_current) + 1);
+        }
+        btn1_prev = digitalRead(BUTTON1_PIN);
         switch (param_current)
         {
         case PARAMS::PARAMS_ONE:
+            // read_sensor_one();
             lcd.setCursor(0, 0);
-            //lcd.print("VBAT " + ecu_parameters.vb);
-            lcd.setCursor(8, 0);
-            lcd.print("VSPD " + ecu_parameters.vsp);
+            lcd.print("VBAT:");
+            lcd.print(ecu_parameters.vb, 1);
+            lcd.setCursor(0, 1);
+            sprintf(buffer, "VSPD:%dmph", ecu_parameters.vsp);
+            lcd.print(buffer);
             break;
         case PARAMS::PARAMS_TWO:
+            // read_sensor_one();
+            lcd.setCursor(0, 0);
+            sprintf(buffer, "REV:%d   ", ecu_parameters.erev);
+            lcd.print(buffer);
             lcd.setCursor(0, 1);
-            lcd.print("REV:" + ecu_parameters.erev);
-            lcd.setCursor(8, 1);
-            lcd.print("WATR: " + ecu_parameters.tw);
+            sprintf(buffer, "WATR:%df  ", ecu_parameters.tw);
+            lcd.print(buffer);
             break;
         case PARAMS::PARAMS_THREE:
+            // read_sensor_two();
             lcd.setCursor(0, 0);
-            lcd.print("ADV:" + ecu_parameters.alphar);
-            lcd.setCursor(8, 0);
-            //lcd.print("MAF:" + ecu_parameters.qa);
+            lcd.print("ADVS:");
+            lcd.print(ecu_parameters.advs, 1);
+            lcd.print(buffer);
+            lcd.setCursor(0, 1);
+            lcd.print("MAF:");
+            lcd.print(ecu_parameters.qa, 1);
             break;
         case PARAMS::PARAMS_FOUR:
+            // read_sensor_two();
+            lcd.setCursor(0, 0);
+            sprintf(buffer, "LOAD:%d   ", ecu_parameters.ldata);
+            lcd.print(buffer);
             lcd.setCursor(0, 1);
-            lcd.print("LD: " + ecu_parameters.ldata);
-            lcd.setCursor(8, 1);
-            lcd.print("TPS:" + ecu_parameters.tps);
+            sprintf(buffer, "TPS:%d%%  ", ecu_parameters.tps);
+            lcd.print(buffer);
             break;
         case PARAMS::PARAMS_FIVE:
+            // read_sensor_three();
             lcd.setCursor(0, 0);
-            lcd.print("IPW:" + ecu_parameters.tim);
-            lcd.setCursor(8, 0);
-            lcd.print("ISC:" + ecu_parameters.isc);
+            lcd.print("INJPW:");
+            lcd.print(ecu_parameters.tim, 1);
+            lcd.setCursor(0, 1);
+            sprintf(buffer, "ISC:%d%% ", ecu_parameters.isc);
+            lcd.print(buffer);
             break;
         case PARAMS::PARAMS_SIX:
+            lcd.setCursor(0, 0);
+            lcd.print("OXY:");
+            lcd.print(ecu_parameters.o2r, 1);
             lcd.setCursor(0, 1);
-            lcd.print("O2R:" + ecu_parameters.o2r);
-            lcd.setCursor(8, 1);
-            lcd.print("RTD:" + ecu_parameters.advs);
+            sprintf(buffer, "ADVS:%d%%", ecu_parameters.advs);
+            lcd.print(buffer);
             break;
         case PARAMS::PARAMS_SEV:
             lcd.setCursor(0, 0);
-            lcd.print("BAR:" + ecu_parameters.barop);
-            lcd.setCursor(8, 0);
-            //lcd.print("MP: " + ecu_parameters.manip);
+            lcd.print("BARO:");
+            lcd.print(ecu_parameters.barop, 1);
+            lcd.setCursor(0, 1);
+            lcd.print("BOOST:");
+            lcd.print(ecu_parameters.manip, 1);
             break;
         case PARAMS::PARAMS_EIGHT:
+            lcd.setCursor(0, 0);
+            lcd.print("WGC:");
+            lcd.print(ecu_parameters.wgc, 1);
             lcd.setCursor(0, 1);
-            lcd.print("WGC:" + ecu_parameters.wgc);
-            lcd.setCursor(8, 1);
-            lcd.print("THV:" + ecu_parameters.thv);
+            lcd.print("THV:");
+            lcd.print(ecu_parameters.thv, 1);
             break;
         }
         break;
