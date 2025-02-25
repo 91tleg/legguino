@@ -2,7 +2,6 @@
 #define ECU_PARAMS_H
 
 #include <Arduino.h>
-#include <LiquidCrystal_I2C.h>
 #include "ssm1.h"
 
 enum class PARAMS : uint8_t
@@ -22,22 +21,22 @@ typedef struct
 {
     uint8_t romid_param[3];
     uint8_t ldata;
-    float vb;
     uint8_t vsp;
-    uint16_t erev;
-    int16_t tw;
-    uint16_t advs;
-    float qa;
-    uint8_t thv;
     uint8_t tps;
-    uint16_t tim;
-    uint16_t isc;
-    uint16_t o2r;
-    uint16_t alphar;
+    uint8_t advs;
+    uint8_t isc;
+    int16_t tw;
+    uint8_t rtrd;
+    uint16_t erev;
+    float wgc;
+    float barop;
+    float vb;
+    float qa;
+    float thv;
+    float tim;
     float manip;
-    uint16_t rtrd;
-    uint16_t wgc;
-    uint16_t barop;
+    float o2r;
+    float alphar;
 } ecu_params;
 #pragma pack(pop)
 
@@ -65,10 +64,12 @@ constexpr uint8_t coolant_look_up_table[256] PROGMEM =
     // The last 29 values need to be inverted (to negative)
 };
 
-void display_romid(LiquidCrystal_I2C *lcd);
 void read_sensor_one(void);
 void read_sensor_two(void);
 void read_sensor_three(void);
 void read_sensor_four(void);
+
+extern ecu_params ecu_parameters;
+extern PARAMS param_current;
 
 #endif // STATE_PARAMS_H
