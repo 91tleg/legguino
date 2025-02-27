@@ -105,6 +105,12 @@ typedef struct
     uint8_t parking_sw : 1;
 } trouble_code_three;
 
+void lcd_print_input_sw(void);
+void lcd_print_io_sw(void);
+void lcd_print_code_one(void);
+void lcd_print_code_two(void);
+void lcd_print_code_three(void);
+
 extern input_switches status;
 extern io_switches status0;
 extern trouble_code_one status1;
