@@ -64,10 +64,23 @@ constexpr uint8_t coolant_look_up_table[256] PROGMEM =
     // The last 29 values need to be inverted (to negative)
 };
 
+void params_page_control(void);
 void read_sensor_one(void);
 void read_sensor_two(void);
 void read_sensor_three(void);
 void read_sensor_four(void);
+void read_sensor_five(void);
+void read_sensor_six(void);
+void read_sensor_seven(void);
+void read_sensor_eight(void);
+void lcd_print_params_one(void);
+void lcd_print_params_two(void);
+void lcd_print_params_three(void);
+void lcd_print_params_four(void);
+void lcd_print_params_five(void);
+void lcd_print_params_six(void);
+void lcd_print_params_seven(void);
+void lcd_print_params_eight(void);
 
 extern ecu_params ecu_parameters;
 extern PARAMS param_current;
