@@ -8,6 +8,21 @@ trouble_code_two status2 = {0};
 trouble_code_three status3 = {0};
 DIAG diag_current = DIAG::IN;
 
+void diag_page_control(void)
+{
+    if (diag_current > DIAG::CLEAR)
+    diag_current = DIAG::IN;
+    btn1 = digitalRead(BUTTON1_PIN);
+    if (btn1 == LOW && btn1_prev == HIGH)
+    {
+        PORTB |= (1 << PB7);
+        _delay_ms(100);
+        PORTB &= ~(1 << PB7);
+        diag_current = static_cast<DIAG>(static_cast<uint8_t>(diag_current) + 1);
+    }
+    btn1_prev = btn1;
+}
+
 void lcd_print_input_sw(void)
 {
     sprintf(buffer, "IG%d AT%d TM%d RM%d", status.ignition, status.auto_trans, status.test_mode, status.read_mode);
