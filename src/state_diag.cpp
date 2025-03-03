@@ -1,17 +1,12 @@
 #include "state_diag.h"
 #include "legguino.h"
 
-input_switches status = {0};
-io_switches status0 = {0};
-trouble_code_one status1 = {0};
-trouble_code_two status2 = {0};
-trouble_code_three status3 = {0};
 DIAG diag_current = DIAG::IN;
 
 void diag_page_control(void)
 {
     if (diag_current > DIAG::CLEAR)
-    diag_current = DIAG::IN;
+        diag_current = DIAG::IN;
     btn1 = digitalRead(BUTTON1_PIN);
     if (btn1 == LOW && btn1_prev == HIGH)
     {
@@ -71,4 +66,29 @@ void lcd_print_code_three(void)
     sprintf(buffer, "49%d 51%d 52%d    ", status3.wrong_maf, status3.neutral_sw, status3.parking_sw);
     lcd.setCursor(0, 1);
     lcd.print(buffer);
+}
+
+void check_clear_code(void)
+{
+    btn2 = digitalRead(BUTTON2_PIN);
+    if (btn2 == LOW && btn2_prev == HIGH)
+    {
+        lcd.setCursor(0, 0);
+        lcd.print("CLEARING........");
+        send_clear_command(ACTIVE_TROUBLE_CODE_ONE_ADDR);
+        _delay_ms(100);
+        send_clear_command(ACTIVE_TROUBLE_CODE_TWO_ADDR);
+        _delay_ms(100);
+        send_clear_command(ACTIVE_TROUBLE_CODE_THREE_ADDR);
+        _delay_ms(100);
+        send_clear_command(STORED_TROUBLE_CODE_ONE_ADDR);
+        _delay_ms(100);
+        send_clear_command(STORED_TROUBLE_CODE_TWO_ADDR);
+        _delay_ms(100);
+        send_clear_command(STORED_TROUBLE_CODE_THREE_ADDR);
+        lcd.clear();
+        lcd_current_page = static_cast<SCAN>(static_cast<uint8_t>(lcd_current_page) + 1);
+    }
+    _delay_ms(100);
+    btn2_prev = digitalRead(BUTTON2_PIN);
 }

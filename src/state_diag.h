@@ -111,6 +111,7 @@ void lcd_print_io_sw(void);
 void lcd_print_code_one(void);
 void lcd_print_code_two(void);
 void lcd_print_code_three(void);
+void check_clear_code(void);
 
 extern input_switches status;
 extern io_switches status0;
