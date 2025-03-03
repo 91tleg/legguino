@@ -71,6 +71,9 @@ def simulate_ecu():
                     response = struct.pack("BBB", 0x71, 0x36, 0)
                     ecu_sim.write(response)
                     log(f"Sent romid: {response.hex()}")
+                elif header == 0xAA and footer == 0x00:
+                    address = (msb << 8) | lsb  # Combine MSB and LSB
+                    log(f"Clear command recieved: {hex(address)} ({ECU_ADDRESSES[address]})")
                 else:
                     log("Invalid request format.")
         time.sleep(0.1)
