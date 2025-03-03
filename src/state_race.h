@@ -11,6 +11,9 @@ enum class RACE : uint8_t
 };
 
 void race_page_control(void);
+void lcd_print_tw(void);
+void lcd_print_tps(void);
+void lcd_print_mp(void);
 
 extern RACE race_current;
 
