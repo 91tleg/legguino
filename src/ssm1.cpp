@@ -13,11 +13,6 @@ void stop_read(void)
 
 void get_romid(uint8_t *buffer)
 {
-    /*
-     * In order to write data, you must be receiving data. ie. To write FF to address 1234 in the ECU, you would first
-     * issue an ECU read command 78123400 and then a write command AA1234FF. Similarly the "Get ROM ID" function only
-     * works if you are receiving data
-     */
     uint8_t read_command[4] = {0x78, 0x00, 0x00, 0x00};
     uint8_t romid_command[4] = {0x00, 0x46, 0x48, 0x49};
     uint8_t romid[3] = {0};
@@ -33,7 +28,7 @@ void get_romid(uint8_t *buffer)
         HWSerial.write(romid_command[i]);
     }
     HWSerial.flush();
-    _delay_ms(300);
+    _delay_ms(250);
 
     int bytes_read = 0;
     while (bytes_read < 3)
@@ -50,35 +45,20 @@ void get_romid(uint8_t *buffer)
     }
     stop_read();
 }
-/*
-void query_romid(void)
-{
-    uint8_t romid[3] = {0};
-    if (true)
-    {
-        USBSerial.print("Received ROMID: ");
-        USBSerial.print(romid[0], HEX);
-        USBSerial.print(romid[1], HEX);
-        USBSerial.println(romid[2], HEX);
-        read_until_no_more();
-    }
-}*/
 
-uint8_t read_data_from_address_ex(uint16_t addr, bool read_once_only)
+uint8_t read_data_from_address(uint16_t addr)
 {
     uint8_t read_command[4] = {0x78, static_cast<uint8_t>(addr >> 8), static_cast<uint8_t>(addr & 0xff), 0x00};
     uint8_t answer[3] = {0};
-    stop_read();
+    //stop_read();
     while (HWSerial.available())
         HWSerial.read(); // Flush the buffer
     for (uint8_t i = 0; i < 4; ++i)
     {
-        HWSerial.write(read_command[i]);
+       HWSerial.write(read_command[i]);
     }
     HWSerial.flush();
-
-    _delay_ms(300);
-
+    _delay_ms(250);
     int retries = 0;
     while (retries < 3)
     {
@@ -88,23 +68,10 @@ uint8_t read_data_from_address_ex(uint16_t addr, bool read_once_only)
             if ((nbytes == 3) && (answer[0] == read_command[1]) && (answer[1] == read_command[2]))
                 break; // Valid response received
         }
-        while (HWSerial.available())
-            HWSerial.read(); // Flush the buffer
-
-        for (uint8_t i = 0; i < 4; ++i)
-        {
-            HWSerial.write(read_command[i]);
-        }
-        HWSerial.flush();
         ++retries;
     }
     stop_read();
     return answer[2]; // Return the data byte
-}
-
-uint8_t read_data_from_address(uint16_t addr)
-{
-    return read_data_from_address_ex(addr, true);
 }
 
 void read_battery_voltage(void)
@@ -123,11 +90,12 @@ void read_rpm(void)
 }
 
 void read_coolant_temp(void)
-{
-    int16_t value = static_cast<int16_t>(pgm_read_byte(&coolant_look_up_table[read_data_from_address(COOLANT_ADDR)]));
-    if (value < 14)
+{   
+    uint8_t index = read_data_from_address(COOLANT_ADDR);
+    int16_t value = static_cast<int16_t>((pgm_read_byte(&coolant_look_up_table[index])));
+    if (index < 14)
         value += 255;
-    else if (value > (255 - 29))
+    else if (index >= 256 - 29)
         value = -value;
     ecu_parameters.tw = value;
 }
@@ -139,7 +107,7 @@ void read_airflow(void)
 
 void read_throttle_percentage(void)
 {
-    ecu_parameters.tps = read_data_from_address(THROTTLE_ADDR);
+    ecu_parameters.tps = read_data_from_address(THROTTLE_ADDR) * 100 / 256;
 }
 
 void read_throttle_signal(void)
@@ -149,7 +117,7 @@ void read_throttle_signal(void)
 
 void read_manifold_pressure(void)
 {
-    ecu_parameters.manip = (static_cast<float>(read_data_from_address(MANIFOLD_PRESSURE_ADDR)) / 0.128) - 1060;
+    ecu_parameters.manip = static_cast<float>(read_data_from_address(MANIFOLD_PRESSURE_ADDR)) / 0.128 - 1060;
 }
 
 void read_boost_control_duty_cycle(void)
@@ -288,12 +256,6 @@ void read_stored_trouble_code_three(void)
     read_trouble_code_three(STORED_TROUBLE_CODE_THREE_ADDR);
 }
 
-// AA MSB LSB 00   (Clear to Zero)
-// AA MSB LSB FF   (If inverted value is used)
-
-/* In order to write data, you must be receiving data. ie. To write FF to address 1234 in the ECU, you would first
- * issue an ECU read command 78123400 and then a write command AA1234FF. Similarly the "Get ROM ID" function only
- * works if you are receiving data*/
 void send_clear_command(uint16_t addr)
 {
     uint8_t clear_command[4] = {0xAA, static_cast<uint8_t>(addr >> 8), static_cast<uint8_t>(addr & 0xff), 0x00};
