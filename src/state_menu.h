@@ -10,9 +10,12 @@ enum class MENU : uint8_t
   /* 01 */ PARAMS_MODE,
   /* 02 */ DIAG_MODE,
   /* 03 */ RACE_MODE,
-  /* 04 */ COMPASS_MODE
 };
 
-void display_menu(MENU, LiquidCrystal_I2C *);
+void display_menu(void);
+void select_mode(void);
+void check_return_menu(void);
+
+extern MENU menu_current;
 
 #endif // STAE_MENU_H
