@@ -2,6 +2,11 @@
 #include "legguino.h"
 
 DIAG diag_current = DIAG::IN;
+input_switches status = {0};
+io_switches status0 = {0};
+trouble_code_one status1 = {0};
+trouble_code_two status2 = {0};
+trouble_code_three status3 = {0};
 
 void diag_page_control(void)
 {
@@ -76,15 +81,11 @@ void check_clear_code(void)
         lcd.setCursor(0, 0);
         lcd.print("CLEARING........");
         send_clear_command(ACTIVE_TROUBLE_CODE_ONE_ADDR);
-        _delay_ms(100);
         send_clear_command(ACTIVE_TROUBLE_CODE_TWO_ADDR);
-        _delay_ms(100);
         send_clear_command(ACTIVE_TROUBLE_CODE_THREE_ADDR);
-        _delay_ms(100);
+        _delay_ms(1000);
         send_clear_command(STORED_TROUBLE_CODE_ONE_ADDR);
-        _delay_ms(100);
         send_clear_command(STORED_TROUBLE_CODE_TWO_ADDR);
-        _delay_ms(100);
         send_clear_command(STORED_TROUBLE_CODE_THREE_ADDR);
         lcd.clear();
         lcd_current_page = static_cast<SCAN>(static_cast<uint8_t>(lcd_current_page) + 1);
