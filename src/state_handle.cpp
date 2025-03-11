@@ -48,6 +48,15 @@ void handle_sensor_eight(void)
     lcd_print_params_eight();
 }
 
+void handle_clear(void)
+{
+    lcd.setCursor(0, 0);
+    lcd.print("CLEAR CODES?    ");
+    lcd.setCursor(0, 1);
+    lcd.print("                ");
+    check_clear_code();
+}
+
 void handle_input_sw(void)
 {
     read_input_switches();

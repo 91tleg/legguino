@@ -11,6 +11,7 @@ void handle_sensor_five(void);
 void handle_sensor_six(void);
 void handle_sensor_seven(void);
 void handle_sensor_eight(void);
+void handle_clear(void);
 void handle_input_sw(void);
 void handle_io_sw(void);
 void handle_active_one(void);
