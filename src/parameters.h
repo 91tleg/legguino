@@ -86,6 +86,7 @@ typedef struct
 } trouble_code_three;
 #pragma pack(pop)
 
+extern ecu_params ecu_parameters;
 extern input_switches status;
 extern io_switches status0;
 extern trouble_code_one status1;
