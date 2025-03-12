@@ -11,9 +11,6 @@
 #include <stdint.h>
 #include <avr/io.h>
 #include <util/delay.h>
-#include <Wire.h> 
-#include <LiquidCrystal_I2C.h>
-#include <LcdBarGraph_I2C.h>
 #include <stdint.h>
 #include "btn.h"
 #include "addresses.h"
@@ -25,16 +22,14 @@
 #include "state_diag.h"
 #include "state_race.h"
 #include "state_handle.h"
-//#include "state_transition.h"
+#include "parameters.h"
+#include "state.h"
+#include "state_transition.h"
 
 #define USBSerial Serial
 #define HWSerial Serial
 
 void setup();
 void loop();
-
-extern LiquidCrystal_I2C lcd;
-extern LcdBarGraph_I2C lbg;
-extern char buffer[]; // Buffer for lcd
 
 #endif // LEGGUINO_H
