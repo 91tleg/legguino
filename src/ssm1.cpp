@@ -21,8 +21,6 @@ void get_romid(uint8_t *buffer)
         HWSerial.write(read_command[i]);
     }
     HWSerial.flush();
-    while (HWSerial.available())
-        HWSerial.read(); // Flush buffer
     for (uint8_t i = 0; i < 4; ++i)
     {
         HWSerial.write(romid_command[i]);
@@ -50,15 +48,13 @@ uint8_t read_data_from_address(uint16_t addr)
 {
     uint8_t read_command[4] = {0x78, static_cast<uint8_t>(addr >> 8), static_cast<uint8_t>(addr & 0xff), 0x00};
     uint8_t answer[3] = {0};
-    //stop_read();
-    while (HWSerial.available())
-        HWSerial.read(); // Flush the buffer
     for (uint8_t i = 0; i < 4; ++i)
     {
        HWSerial.write(read_command[i]);
     }
     HWSerial.flush();
     _delay_ms(250);
+    
     int retries = 0;
     while (retries < 3)
     {
