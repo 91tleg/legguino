@@ -1,45 +1,9 @@
-#ifndef ECU_PARAMS_H
-#define ECU_PARAMS_H
+#ifndef STATE_PARAMS_H
+#define STATE_PARAMS_H
 
 #include <Arduino.h>
 #include "ssm1.h"
 #include "btn.h"
-
-enum class PARAMS : uint8_t
-{
-	/* 00 */ PARAMS_ONE,
-	/* 01 */ PARAMS_TWO,
-	/* 02 */ PARAMS_THREE,
-	/* 03 */ PARAMS_FOUR,
-	/* 04 */ PARAMS_FIVE,
-	/* 05 */ PARAMS_SIX,
-	/* 06 */ PARAMS_SEV,
-	/* 07 */ PARAMS_EIGHT,
-	/* 07 */ PARAMS_MAX 
-};
-
-#pragma pack(push, 1)
-typedef struct
-{
-	uint8_t ldata;
-	uint8_t vsp;
-	uint8_t tps;
-	uint8_t advs;
-	uint8_t isc;
-	uint8_t rtrd;
-	int16_t tw;
-	uint16_t erev;
-	float wgc;
-	float barop;
-	float vb;
-	float qa;
-	float thv;
-	float tim;
-	float manip;
-	float o2r;
-	float alphar;
-} ecu_params;
-#pragma pack(pop)
 
 constexpr uint8_t coolant_look_up_table[256] PROGMEM =
 {
@@ -82,8 +46,5 @@ void lcd_print_params_five(void);
 void lcd_print_params_six(void);
 void lcd_print_params_seven(void);
 void lcd_print_params_eight(void);
-
-extern ecu_params ecu_parameters;
-extern PARAMS param_current;
 
 #endif // STATE_PARAMS_H
