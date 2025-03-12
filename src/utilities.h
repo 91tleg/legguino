@@ -1,16 +1,23 @@
 #ifndef UTILITIES_H
 #define UTILITIES_H
 
-#include "legguino.h"
+#include <Wire.h> 
+#include <LiquidCrystal_I2C.h>
+#include <LcdBarGraph_I2C.h>
 
-#define TEST 0
-
-void read_until_no_more(void);
-void print_received_data(byte answer[3]);
-void simulate_tester(void);
+/* Set bit b (0-7) in byte a */
+#define BIT_SET(var,pos) ((var) |= (1U<<(pos)))
+/* Clear bit b (0-7) in byte a */
+#define BIT_CLEAR(var,pos) ((var) &= ~(1U<<(pos)))
 
 #if !defined(UNUSED)
 #define UNUSED(x) (void)(x)
 #endif
 
-#endif /* UTILITIES_H */
+void print_received_data(uint8_t answer[3]);
+
+extern LiquidCrystal_I2C lcd;
+extern LcdBarGraph_I2C lbg;
+extern char buffer[]; // Buffer for lcd
+
+#endif // UTILITIES_H
