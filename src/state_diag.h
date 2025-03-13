@@ -1,4 +1,3 @@
-
 /*
  * The current codes are stored as bit flags in locations 0x0047 through 0x0049 and the previous codes are stored
  * in locations 0x1604 through 0x1606.
@@ -31,79 +30,8 @@
 #define STATE_DIAG_H
 
 #include <Arduino.h>
-
-enum class DIAG : uint8_t
-{
-    /* 00 */ IN,
-    /* 01 */ IO,
-    /* 02 */ AC_ONE,
-    /* 03 */ AC_TWO,
-    /* 04 */ AC_THREE,
-    /* 05 */ SC_ONE,
-    /* 06 */ SC_TWO,
-    /* 07 */ SC_THREE,
-    /* 08 */ CLEAR
-};
-
-typedef struct
-{
-    uint8_t ignition : 1;
-    uint8_t auto_trans : 1;
-    uint8_t test_mode : 1;
-    uint8_t read_mode : 1;
-    uint8_t unused_bit : 1;
-    uint8_t neutral : 1;
-    uint8_t park : 1;
-    uint8_t california : 1;
-} input_switches;
-
-typedef struct
-{
-    uint8_t idle_sw : 1;
-    uint8_t ac_sw : 1;
-    uint8_t ac_relay : 1;
-    uint8_t rad_fan : 1;
-    uint8_t fuel_pump : 1;
-    uint8_t purge_valve : 1;
-    uint8_t pinging : 1;
-    uint8_t press_exch : 1;
-} io_switches;
-
-typedef struct
-{
-    uint8_t crank : 1;
-    uint8_t starter : 1;
-    uint8_t cam : 1;
-    uint8_t inj_1 : 1;
-    uint8_t inj_2 : 1;
-    uint8_t inj_3 : 1;
-    uint8_t inj_4 : 1;
-    uint8_t unused_bit_7 : 1;
-} trouble_code_one;
-
-typedef struct
-{
-    uint8_t temp : 1;
-    uint8_t knock : 1;
-    uint8_t maf : 1;
-    uint8_t iacv : 1;
-    uint8_t tps : 1;
-    uint8_t oxygen : 1;
-    uint8_t vss : 1;
-    uint8_t purge : 1;
-} trouble_code_two;
-
-typedef struct
-{
-    uint8_t fuel_trim : 1;
-    uint8_t idle_sw : 1;
-    uint8_t unused_bit_2 : 1;
-    uint8_t wgc : 1;
-    uint8_t baro : 1;
-    uint8_t wrong_maf : 1;
-    uint8_t neutral_sw : 1;
-    uint8_t parking_sw : 1;
-} trouble_code_three;
+#include "state.h"
+#include "btn.h"
 
 void diag_page_control(void);
 void lcd_print_input_sw(void);
@@ -112,12 +40,5 @@ void lcd_print_code_one(void);
 void lcd_print_code_two(void);
 void lcd_print_code_three(void);
 void check_clear_code(void);
-
-extern input_switches status;
-extern io_switches status0;
-extern trouble_code_one status1;
-extern trouble_code_two status2;
-extern trouble_code_three status3;
-extern DIAG diag_current;
 
 #endif // STATE_DIAG_H
