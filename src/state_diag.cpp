@@ -1,24 +1,16 @@
 #include "state_diag.h"
-#include "legguino.h"
-
-DIAG diag_current = DIAG::IN;
-input_switches status = {0};
-io_switches status0 = {0};
-trouble_code_one status1 = {0};
-trouble_code_two status2 = {0};
-trouble_code_three status3 = {0};
 
 void diag_page_control(void)
 {
-    if (diag_current > DIAG::CLEAR)
-        diag_current = DIAG::IN;
-    btn1 = digitalRead(BUTTON1_PIN);
+    if (diag_curr_page > DIAG::CLEAR)
+        diag_curr_page = DIAG::IN;
+    btn1_read();
     if (btn1 == LOW && btn1_prev == HIGH)
     {
         PORTB |= (1 << PB7);
         _delay_ms(100);
         PORTB &= ~(1 << PB7);
-        diag_current = static_cast<DIAG>(static_cast<uint8_t>(diag_current) + 1);
+        diag_curr_page = static_cast<DIAG>(static_cast<uint8_t>(diag_curr_page) + 1);
     }
     btn1_prev = btn1;
 }
@@ -75,7 +67,7 @@ void lcd_print_code_three(void)
 
 void check_clear_code(void)
 {
-    btn2 = digitalRead(BUTTON2_PIN);
+    btn2_read();
     if (btn2 == LOW && btn2_prev == HIGH)
     {
         lcd.setCursor(0, 0);
@@ -88,8 +80,8 @@ void check_clear_code(void)
         send_clear_command(STORED_TROUBLE_CODE_TWO_ADDR);
         send_clear_command(STORED_TROUBLE_CODE_THREE_ADDR);
         lcd.clear();
-        lcd_current_page = static_cast<SCAN>(static_cast<uint8_t>(lcd_current_page) + 1);
+        scan_curr_page = static_cast<SCAN>(static_cast<uint8_t>(scan_curr_page) + 1);
     }
     _delay_ms(100);
-    btn2_prev = digitalRead(BUTTON2_PIN);
+    btn2_prev = btn2;
 }
