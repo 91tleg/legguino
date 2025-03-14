@@ -1,69 +1,52 @@
 #include "btn.h"
 
-
-BUTTON_STATE button = {};
-
 uint8_t btn1 = LOW;
 uint8_t btn1_prev = LOW;
 uint8_t btn2 = LOW;
 uint8_t btn2_prev = LOW;
 
-void btn_init(void)
+void btn1_init(void)
 {
-    pinMode(BUTTON1_PIN, INPUT_PULLUP);
-    pinMode(BUTTON2_PIN, INPUT_PULLUP);
+    DDRA &= ~(1 << PA0);  // Set pin 22 as input
+    PORTA |= (1 << PA0);  // Enable pull-up resistor
 }
 
-void btn_read(void)
+void btn2_init(void)
 {
-    btn1 = digitalRead(BUTTON1_PIN);
-    btn2 = digitalRead(BUTTON2_PIN);
+    DDRA &= ~(1 << PA2);  // Set pin 24 as input
+    PORTA |= (1 << PA2);  // Enable pull-up resistor
 }
 
-BUTTON_STATE get_button_state()
+void btn1_read(void)
 {
-    static int btn1_prev = HIGH;
-    static unsigned long pressedTime = 0;
-    
-    int btn1 = digitalRead(BUTTON1_PIN); // Read button state
-    unsigned long currentMillis = millis();
-
-    if (btn1 == LOW && btn1_prev == HIGH) // Button just pressed
-    {
-        pressedTime = currentMillis;
-        btn1_prev = LOW;
-    }
-    else if (btn1 == HIGH && btn1_prev == LOW) // Button just released
-    {
-        btn1_prev = HIGH;
-        if (currentMillis - pressedTime >= LONG_PRESS_TIME)
-        {
-            return BUTTON_STATE::LONG_PRESS; // Long press detected
-        }
-        else
-        {
-            return BUTTON_STATE::SHORT_PRESS; // Short press detected
-        }
-    }
-
-    return BUTTON_STATE::OFF; // No press detected
+    btn1 = (PINA & (1 << PA0)) ? HIGH : LOW;
 }
 
-bool button_pressed(void)
+void btn2_read(void)
 {
-    static unsigned long lastPressTime = 0;
-    btn1 = digitalRead(BUTTON1_PIN);
+    btn2 = (PINA & (1 << PA2)) ? HIGH : LOW;
+}
+
+bool btn1_pressed(void)
+{
+    btn1_read();
     if (btn1 == LOW && btn1_prev == HIGH)
     {
-        if (millis() - lastPressTime > DEBOUNCE_DELAY) // Debounce check
-        {
-            lastPressTime = millis();
-            btn1_prev = LOW;
-            return true;
-        }
+        btn1_prev = btn1;
+        return true;
     }
     btn1_prev = btn1;
     return false;
 }
 
-
+bool btn2_pressed(void)
+{
+    btn2_read();
+    if (btn2 == LOW && btn2_prev == HIGH)
+    {
+        btn2_prev = btn2;
+        return true;
+    }
+    btn2_prev = btn2;
+    return false;
+}
