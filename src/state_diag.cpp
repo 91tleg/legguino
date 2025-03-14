@@ -1,5 +1,5 @@
 #include "state_diag.h"
-
+/*
 void diag_page_control(void)
 {
     if (diag_curr_page > DIAG::CLEAR)
@@ -13,6 +13,17 @@ void diag_page_control(void)
         diag_curr_page = static_cast<DIAG>(static_cast<uint8_t>(diag_curr_page) + 1);
     }
     btn1_prev = btn1;
+}*/
+
+void diag_page_control(void)
+{
+    if (diag_curr_page > DIAG::CLEAR)
+        diag_curr_page = DIAG::IN;
+    btn1_read();
+    if (btn1_pressed()) {
+        trigger_feedback_one();
+        diag_curr_page = static_cast<DIAG>(static_cast<uint8_t>(diag_curr_page) + 1);
+    }
 }
 
 void lcd_print_input_sw(void)
