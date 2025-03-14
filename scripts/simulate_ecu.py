@@ -57,7 +57,7 @@ def simulate_ecu():
                         log(f"Valid address: {hex(address)} ({ECU_ADDRESSES[address]})")
 
                         # Generate a random value
-                        response_value = random.randint(0, 255)
+                        response_value = random.randint(220, 255)
                         log(f"Generated response: {response_value}")
 
                         # Reply format: MSB, LSB, Data
@@ -65,7 +65,7 @@ def simulate_ecu():
                         ecu_sim.write(response)
                         log(f"Sent response: {response.hex()}")
                     else:
-                        log(f"Unknown address: {hex(address)}")
+                        log(f"Read command recieved for address: {hex(address)}")
                 elif msb == 0x46 and lsb == 0x48:
                     log(f"Get romid command recieved.")
                     response = struct.pack("BBB", 0x71, 0x36, 0)
@@ -78,4 +78,5 @@ def simulate_ecu():
                     log("Invalid request format.")
         time.sleep(0.1)
 
-simulate_ecu()
+if __name__ == "__main__":
+    simulate_ecu()
