@@ -3,8 +3,6 @@
 
 #include <Arduino.h>
 #include <stdint.h>
-#include "state_menu.h"
-#include "legguino.h"
 
 void btn1_init(void);
 void btn2_init(void);
