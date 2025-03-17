@@ -103,6 +103,7 @@ void __attribute__((always_inline)) loop()
         }
         break;
     }*/
-    _delay_ms(100); // Delay to avoid sending requests too fast
+   //_delay_ms(100); // Delay to avoid sending requests too fast
+   delay_millis(100);
 }
 #pragma GCC diagnostic pop
