@@ -1,7 +1,7 @@
 #ifndef UTILITIES_H
 #define UTILITIES_H
 
-#include <Wire.h> 
+//#include <Wire.h>
 #include <LiquidCrystal_I2C.h>
 #include <LcdBarGraph_I2C.h>
 
@@ -15,6 +15,9 @@
 #endif
 
 void print_received_data(uint8_t answer[3]);
+void trigger_feedback_one(void);
+void trigger_feedback_two(void);
+void delay_millis(unsigned long duration);
 
 extern LiquidCrystal_I2C lcd;
 extern LcdBarGraph_I2C lbg;
