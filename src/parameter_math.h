@@ -30,22 +30,93 @@ constexpr uint8_t coolant_look_up_table[256] PROGMEM =
 		  24, 27, 31, 33, 36, 40, 42, 45, 47, 47, 47, 47, 47, 47, 47, 47
 };
 
-void read_battery_voltage(void); // x*0.08
-void read_speed(void);           // x/1.6
-void read_rpm(void);             // x*25
-void read_coolant_temp(void);    // Lookup table
-void read_airflow(void);         // x/50
+void read_battery_voltage(void); // x*0.08    V
+/*
+ * Voltage measured at the ECU.
+ */
+
+void read_speed(void);           // x/1.6    mph
+/* 
+ * Speed measured by the vehicle speed sensor.
+ */
+
+void read_rpm(void);             // x*25    rev / min
+/*
+ * RPM measured by cam and crank angle sensors.
+ */
+
+void read_coolant_temp(void);    // look_up_table(x)    deg F
+void read_airflow(void);         // x/50   V
+/*
+ * MAF measures the amount of air being used for the air/fuel mixture.
+ */
+
 void read_throttle_percentage(void);
-void read_throttle_signal(void);
+void read_throttle_signal(void);    // V
+/* 
+ * How much the throttle is open.
+ */
+
 void read_manifold_pressure(void);        // x/0.128-1060
 void read_boost_control_duty_cycle(void); // x/2.56
-void read_ignition_timing(void);          // x   advs
-void read_load(void);                     // x
-void read_injector_pulse_width(void);     // x*0.128
-void read_iacv_duty_cycle(void);          // x/2
-void read_o2_signal(void);                // x/100
-void read_timing_correction(void);        // x
+void read_ignition_timing(void);          // x   deg BTDC
+/* 
+ * Degrees BTDC that the spark is fired.
+ * this is one of the primary engine control parameters (outputs of the ECU)
+ * - Timing is altered if knocking is detected, or angular velocity of the crankshaft fluctuates (engine is jerking)
+ */
+
+void read_load(void);                     // x    air mass/rev
+/*
+ * The engine load is essentially the mass of air consumed per revolution of the engine. 
+ * The greater the mass per revolution, the greater demand on the engine for output power.
+ * - Calculated using MAF (mass/time) sensor and RPM (rev/time) from cam/crank sensors:
+ *   (mass / time) / (rev / time) = mass / rev
+ */
+
+void read_injector_pulse_width(void);     // x*0.128 ms
+/*
+ * IPW is the time that the ECU keeps each injector open during the intake stroke.
+ * - Primarily dependent upon the engine load.
+ * - A larger mass of air requires a larger amount of fuel to maintain a stochiometric ratio.
+ * - Other corrections are applied at different conditions, e.g. starting (increased for rich mixture).
+ */
+
+void read_iacv_duty_cycle(void);          // x/2   % duty cycle
+/*
+ * The amount of air allowed to bypass the throttle for idle.
+ * - Measured as a percent of the time that the solenoid is open.
+ * - Continuously opened and closed at a variable rate to control the amount of air.
+ * - Higher duty ratio -> valve is open longer -> higher idle
+ * - Non-zero even when not idling; but insignificant when compared to the air entering from open throttle.
+ * Compensates for idle speed decreases when:
+ *  - AC operation / electrical loads.
+ *  - Prevent rich air/fuel during deceleration.
+ *  - Mechanically compensate for engine temperature.
+ */
+
+void read_o2_signal(void);                // x/100   V
+/*
+ * Lower values (towards 0) -> lean mixture
+ * Higher (towards 1) -> rich mixture
+ */
+
+void read_timing_correction(void);        // x   deg
+/* 
+ * The degrees of timing advance added to timing to correct for knock
+ * - Changed to non-zero when pinging is detected by the knock sensor
+ * - Used to temporarily advance (often only for several seconds) the timing to counteract pinging
+ */
+
 void read_fuel_trim(void);                // (x-128)/1.28
+/*
+ * The increment applied to the fuel injection to bring the air/fuel mixture (as sensed by the 
+ * oxygen sensor) closer to the stochiometric ratio.
+ * - 0.1V - 0.5V (lean mixture) -> a/f correction is positive
+ * - 0.5V - 0.9V (rich mixture) -> a/f correction is negative
+ * - The longer the mixture stays rich or lean, the greater the correction is applied
+ */
+
 void read_atmosphere_pressure(void);      // x*1.25+500
 
 void read_input_switches(void);
