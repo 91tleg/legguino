@@ -41,7 +41,7 @@ enum class PARAMS : uint8_t
 	/* 04 */ PARAMS_FIVE,
 	/* 05 */ PARAMS_SIX,
 	/* 06 */ PARAMS_SEV,
-	/* 07 */ PARAMS_EIGHT,
+	/* 07 */ PARAMS_EIGHT
 };
 
 enum class DIAG : uint8_t
@@ -61,7 +61,7 @@ enum class RACE : uint8_t
 {
     /* 00 */ TW,
     /* 01 */ TPS,
-    /* 02 */ MP,
+    /* 02 */ MP
 };
 
 extern MENU menu_curr_page;
