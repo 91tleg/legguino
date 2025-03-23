@@ -14,11 +14,12 @@ void setUp(void)
 void tearDown(void) {}
 
 bool btn1_pressed_called = true;  // Mocking button press
-bool btn1_pressed(void) {
+bool btn1_pressed(void) 
+{
     return btn1_pressed_called;
 }
 
-void test_scan_page_control(void) 
+void test_scan_page_control(void)  
 {
     scan_page_control();
     TEST_ASSERT_EQUAL(SCAN::SENSOR_TWO, scan_curr_page);
@@ -58,7 +59,7 @@ void test_race_page_control(void)
     TEST_ASSERT_EQUAL(RACE::TW, race_curr_page);
 }
 
-int main() 
+int main()
 {
     UNITY_BEGIN();
 
