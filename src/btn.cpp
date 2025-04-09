@@ -17,17 +17,17 @@ void btn2_init(void)
     PORTA |= (1 << PA2);  // Enable pull-up resistor
 }
 
-void btn1_read(void)
+void __attribute__((weak)) btn1_read(void)
 {
     btn1 = (PINA & (1 << PA0)) ? HIGH : LOW;
 }
 
-void btn2_read(void)
+void __attribute__((weak)) btn2_read(void)
 {
     btn2 = (PINA & (1 << PA2)) ? HIGH : LOW;
 }
 
-bool btn1_pressed(void)
+bool __attribute__((weak)) btn1_pressed(void)
 {
     btn1_read();
     if (btn1 == LOW && btn1_prev == HIGH)
@@ -39,7 +39,7 @@ bool btn1_pressed(void)
     return false;
 }
 
-bool btn2_pressed(void)
+bool __attribute__((weak)) btn2_pressed(void)
 {
     btn2_read();
     if (btn2 == LOW && btn2_prev == HIGH)
