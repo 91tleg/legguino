@@ -4,6 +4,7 @@
 #include <util/delay.h>
 #include "state_menu.h"
 #include "state_execute.h"
+#include "utilities.h"
 
 void setup()
 {
