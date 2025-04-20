@@ -9,9 +9,9 @@
 
 #include <avr/pgmspace.h>
 #include <stdint.h>
-#include "legguino.h"
 #include "addresses.h"
 #include "parameters.h"
+#include "utilities.h"
 
 /* ===== PROTOCOLS ===== */
 /* 12	00	 00  00	    Stop                                                                
