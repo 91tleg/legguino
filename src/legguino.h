@@ -11,20 +11,8 @@
 #include <stdint.h>
 #include <avr/io.h>
 #include <util/delay.h>
-#include <stdint.h>
-#include "btn.h"
-#include "addresses.h"
-#include "ssm1.h"
-#include "utilities.h"
 #include "state_menu.h"
-#include "state_scan.h"
-#include "state_params.h"
-#include "state_diag.h"
-#include "state_race.h"
-#include "state_handle.h"
-#include "parameters.h"
-#include "state.h"
-#include "state_transition.h"
+#include "state_execute.h"
 
 #define USBSerial Serial
 #define HWSerial Serial
