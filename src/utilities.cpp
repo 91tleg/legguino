@@ -23,19 +23,14 @@ void print_received_data(uint8_t answer[3])
 void trigger_feedback_one(void)
 {
     PORTB |= (1 << PB7);
-    _delay_ms(10);
+    _delay_ms(5);
     PORTB &= ~(1 << PB7);
 }
 
 void trigger_feedback_two(void)
 {
     PORTB |= (1 << PB7);
-    _delay_ms(50);
+    _delay_ms(80);
     PORTB &= ~(1 << PB7);
 }
 
-void delay_millis(unsigned long duration) {
-    unsigned long start_time = millis();
-    while (millis() - start_time < duration) 
-    {}
-}
